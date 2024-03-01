@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Pytest cache
+.pytest_cache/
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Project-specific
+# Consider excluding any large data files, logs, or other artifacts
+# that are not needed for building the Docker image
+data/
+logs/
+
