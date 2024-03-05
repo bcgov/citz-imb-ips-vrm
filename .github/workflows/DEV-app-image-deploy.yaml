@@ -43,7 +43,7 @@ jobs:
           DC_TEMPLATE: "app-dc-template.yaml"
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
           ENVIRONMENT: "dev"
-          APPLICATION_NAME: "pims-app"
+          APPLICATION_NAME: "vrm-app"
           LICENSE_PLATE: "${{ secrets.LICENSE_PLATE }}"
         run: |
           ./.github/helpers/deploy.sh
@@ -68,7 +68,7 @@ jobs:
       # Check Deployment Status
       - name: Check Deployment Status
         run: |
-          oc rollout status -n ${{ secrets.OPENSHIFT_DEV_NAMESPACE }} dc/pims-app --watch
+          oc rollout status -n ${{ secrets.OPENSHIFT_DEV_NAMESPACE }} dc/vrm-app --watch
 
   # Job to clean up previous objects in OpenShift
   Clean-Up:
