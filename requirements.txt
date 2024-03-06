@@ -1,0 +1,9 @@
+python-decouple
+requests
+psycopg2
+requests
+pandas
+openpyxl
+alembic
+SQLAlchemy
+python-dotenv
