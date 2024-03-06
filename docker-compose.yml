@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+
+  db:
+    container_name: vrmprocess_db
+    image: postgres
+    restart: always
+    ports:
+      - 25432:5432
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DBNAME}
+
+  pgadmin:
+    container_name: vrmprocess_pgadmin
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - 25050:80
+    depends_on:
+      - db
+
+  jsonrpc2:
+    container_name: jsonrpc2
+    build: .
+    command: bash -c "alembic upgrade head && python3 server.py"
+    volumes:
+      - .:/app
+    ports:
+      - 5555:5555
+    depends_on:
+      - db
+    restart: always
