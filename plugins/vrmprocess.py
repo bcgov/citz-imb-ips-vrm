@@ -223,10 +223,8 @@ class VRMProcess(Extension):
             # Create sub-task ticket if it doesn't exist, otherwise edit existing sub-task ticket
             if not subtask_ticket_key:
                 created_subtask_ticket_key = self.create_subtask_ticket(ticket, parent_ticket_key)
-                print("created_subtask_ticket_key 당!!!! >> " , created_subtask_ticket_key)
             else: 
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
-                print("subtask_ticket_key 당!!!! >> " , subtask_ticket_key)
             
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -266,7 +264,6 @@ class VRMProcess(Extension):
         else:
             # Handle other error cases
             print(f"Error: {response.status_code} - {response.text}")
-            print('ticket key 222: ',ticket_key)
 
         return ticket_key
     
@@ -291,11 +288,9 @@ class VRMProcess(Extension):
         if response.status_code == 200 and response.json().get('issues'):
             # Get the key of the first issue
             ticket_key = response.json()['issues'][0]['key']
-            print('sub ticket key : ',ticket_key)
         else:
             # Handle other error cases
             print(f"Error: {response.status_code} - {response.text}")
-            print('sub ticket key 222: ',ticket_key)
 
         return ticket_key    
 
@@ -333,7 +328,6 @@ class VRMProcess(Extension):
 
         # Check if the request was successful (status code 201 for created)
         if response.status_code == 201:
-            print("Parent ticket created successfully. key: ",response.json()["key"])
             # Extract and return the key of the created ticket
             ticket_key = response.json()["key"]
         else:
