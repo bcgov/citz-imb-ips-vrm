@@ -34,12 +34,12 @@ jobs:
       # Build the APP image
       - name: Build APP Image
         run: |
-          docker-compose -f compose.prod.yaml build frontend
+          docker-compose -f ${{ vars.COMPOSE_FILE_NAME }} build ${{ vars.APP_NAME }}
 
       # Tag the APP image
       - name: Tag APP Image
         run: |
-          docker tag vrm_frontend ${{ secrets.PUBLIC_IMAGE_REPOSITORY }}/${{ secrets.OPENSHIFT_TOOLS_NAMESPACE }}/vrm-app:${{github.event.pull_request.number}}
+          docker tag jsonrpc2 ${{ secrets.PUBLIC_IMAGE_REPOSITORY }}/${{ secrets.OPENSHIFT_TOOLS_NAMESPACE }}/vrm-app:${{github.event.pull_request.number}}
 
       # Push the APP image
       - name: Push APP Image
