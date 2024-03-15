@@ -48,13 +48,13 @@ jobs:
       # Make changes to image tag in values.yaml within GitOps repo
     - name: Clone, Update, and Commit Changes
       run: |
-        git clone git@github.com:bcgov-c/tenant-gitops-b875cc.git
-        cd tenant-gitops-b875cc
+        git clone git@github.com:bcgov-c/tenant-gitops-e1c611.git
+        cd tenant-gitops-e1c611
 
         FILE_PATH="citz-imb-vrm/values.yaml"
         NEW_TAG="${{ steps.get-pr-number.outputs.result }}"
 
-        yq e ".backend.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        yq e ".image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
 
         git config user.email "brandon.bouchard@gov.bc.ca"
         git config user.name "Bottle7"
