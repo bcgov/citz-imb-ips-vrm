@@ -217,6 +217,7 @@ class VRMProcess(Extension):
             vpr_score = entry.get("definition", {}).get("vpr", {}).get("score")
             asset_id = entry.get("asset", {}).get("id")
             vulnerability_id = entry.get("id")
+            fqdn = entry.get("asset", {}).get("fqdn")
 
             # Resolve asset details using IP address
             asset = self.resolve_reverse_ip(ip_address)
@@ -243,6 +244,7 @@ class VRMProcess(Extension):
                 'vpr_score': vpr_score,
                 'asset_id': asset_id,
                 'vulnerability_id': vulnerability_id,
+                'fqdn': fqdn
             }
 
             # Create parent ticket if it doesn't exist
@@ -408,7 +410,7 @@ class VRMProcess(Extension):
             "project": {
                 "key": "VULNA"
             },
-            "summary": f"{ticket['ip_address']} - {ticket['client_name']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
+            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\nSynopsys:\n{ticket['synopsys']}\n\n Description:\n{ticket['description']}\n\n Solution:\n{ticket['solution']} \n\nOutput:{ticket['output']}",
             "customfield_10200": ticket['asset_id'], # asset_id
             "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
@@ -664,7 +666,7 @@ class VRMProcess(Extension):
             "project": {
                 "key": "VULNA"
             },
-            "summary": f"{ticket['ip_address']} - {ticket['client_name']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
+            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\nSynopsys:\n{ticket['synopsys']}\n\n Description:\n{ticket['description']}\n\n Solution:\n{ticket['solution']} \n\nOutput:{ticket['output']}",
             "customfield_10200": ticket['asset_id'], # asset_id
             "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
