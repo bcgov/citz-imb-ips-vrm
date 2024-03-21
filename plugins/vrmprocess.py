@@ -259,11 +259,9 @@ class VRMProcess(Extension):
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
 
             # Check the status of the Jira issue with subtask_ticket_key.
-            # If the status is "Fixed", transition the status to a different state.
-            if ticket['state'] == "Fixed":
             # Transition the status of the Jira issue
-                transition_response = self.transition_jira_status(subtask_ticket_key)
-                print(transition_response)
+            transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
+            print(transition_response)
             
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -302,7 +300,7 @@ class VRMProcess(Extension):
             print('ticket key : ',ticket_key)
         else:
             # Handle other error cases
-            print(f"Error: {response.status_code} - {response.text}")
+            print(f"get_parent_ticket_key Response: {response.status_code} - {response.text}")
 
         return ticket_key
     
@@ -329,7 +327,7 @@ class VRMProcess(Extension):
             ticket_key = response.json()['issues'][0]['key']
         else:
             # Handle other error cases
-            print(f"Error: {response.status_code} - {response.text}")
+            print(f"get_sub_ticket_key Response: {response.status_code} - {response.text}")
 
         return ticket_key    
     
@@ -356,7 +354,7 @@ class VRMProcess(Extension):
             ticket_key = response.json()['issues'][0]['key']
         else:
             # Handle other error cases
-            print(f"Error: {response.status_code} - {response.text}")
+            print(f"find_sub_ticket_key_with_pluginID Response: {response.status_code} - {response.text}")
 
         return ticket_key    
 
@@ -398,7 +396,7 @@ class VRMProcess(Extension):
             ticket_key = response.json()["key"]
         else:
             # Handle other error cases
-            print(f"Error: {response.status_code} - {response.text}")
+            print(f"create_parent_ticket Response: {response.status_code} - {response.text}")
         
         return ticket_key
 
@@ -440,7 +438,7 @@ class VRMProcess(Extension):
     
     # Edit an existing sub-task ticket with updated information.
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
-        print("edit_subtask_ticket당!!!!!!!!!!!")
+        print("edit_subtask_ticket!!!!!!!!!!!")
         ticket_key = None
 
         data_fields = {
@@ -455,11 +453,9 @@ class VRMProcess(Extension):
             }
         
         # Check the status of the Jira issue with subtask_ticket_key.
-        # If the status is "Fixed", transition the status to a different state.
-        if ticket['state'] == "Fixed":
         # Transition the status of the Jira issue
-            transition_response = self.transition_jira_status(subtask_ticket_key)
-            print(transition_response)
+        transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
+        print(transition_response)
 
         response = requests.put(f"{JIRA_API_EDIT_URL}/{subtask_ticket_key}", json={"fields": data_fields}, headers=JIRA_API_HEADER, auth=JIRA_AUTH)
         if response.status_code == 200:
@@ -470,7 +466,7 @@ class VRMProcess(Extension):
     def request_export_uuid_from_tenable(self, num_assets = 86299710):
 
         # API endpoint
-        url = 'https://cloud.tenable.com/vulns/export'
+        url = "https://cloud.tenable.com/vulns/export"
 
         # API request headers
         headers = {
@@ -626,7 +622,7 @@ class VRMProcess(Extension):
                 #'vulnerability_id': vulnerability_id,
             }
 
-            print("api에서 가져온거 : ",ticket)
+            print("TICKET API INFO : ",ticket)
 
             # Create parent ticket if it doesn't exist
             if not parent_ticket_key:
@@ -642,11 +638,9 @@ class VRMProcess(Extension):
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
 
             # Check the status of the Jira issue with subtask_ticket_key.
-            # If the status is "Fixed", transition the status to a different state.
-            if state == "Fixed":
             # Transition the status of the Jira issue
-                transition_response = self.transition_jira_status(subtask_ticket_key)
-                print(transition_response)
+            transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
+            print(transition_response)
 
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -698,13 +692,21 @@ class VRMProcess(Extension):
         return ticket_key
     
     # Transition a Jira status to a specific status.
-    def transition_jira_status(self, issue_key):
-        print("issue_key : ",issue_key)
+    def transition_jira_status(self, ticket, issue_key):
+        print("issue_key : ",issue_key, ' / ticket state: ',ticket['state'])
+        transition_id = None
+        # Check the status of the Jira issue with subtask_ticket_key.
+        # If the status is "Fixed", transition the status to a different state.
+        if ticket['state'] == "Fixed":
+        # Transition the status of the Jira issue
+            transition_id = "41" # Mitigated
+        else:
+            transition_id = "21" # Active
 
         # Request body
         data = {
             "transition": {
-                "id": "41"  # Mitigated
+                "id": transition_id  # Mitigated
             }
         }
 
