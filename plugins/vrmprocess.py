@@ -1,11 +1,11 @@
-import datetime
 import time
 import pandas as pd
 import json
 import requests
 import psycopg2
 import pytz
-import datetime
+from datetime import datetime
+import datetime as dt
 from requests.auth import HTTPBasicAuth
 from decouple import config
 from server import Extension, jsonrpc2_result_encode
@@ -250,13 +250,20 @@ class VRMProcess(Extension):
                 parent_ticket_key = self.create_parent_ticket(asset) 
                 
             # Check for sub-task ticket
-            subtask_ticket_key= self.get_sub_ticket_key(vulnerability_id)
+            subtask_ticket_key= self.get_sub_ticket_key(plugin_id, ip_address)
 
             # Create sub-task ticket if it doesn't exist, otherwise edit existing sub-task ticket
             if not subtask_ticket_key:
                 created_subtask_ticket_key = self.create_subtask_ticket(ticket, parent_ticket_key)
             else: 
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
+
+            # Check the status of the Jira issue with subtask_ticket_key.
+            # If the status is "Fixed", transition the status to a different state.
+            if ticket['state'] == "Fixed":
+            # Transition the status of the Jira issue
+                transition_response = self.transition_jira_status(subtask_ticket_key)
+                print(transition_response)
             
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -300,12 +307,12 @@ class VRMProcess(Extension):
         return ticket_key
     
     # Retrieve the key of the sub-task ticket associated with the given vulnerability ID.
-    def get_sub_ticket_key(self, vulnerability_id):
+    def get_sub_ticket_key(self, plugin_id, ip_address):
 
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        jql_query =  f'cf[10201] ~ "{vulnerability_id}"'
+        jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -433,6 +440,7 @@ class VRMProcess(Extension):
     
     # Edit an existing sub-task ticket with updated information.
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
+        print("edit_subtask_ticket당!!!!!!!!!!!")
         ticket_key = None
 
         data_fields = {
@@ -445,6 +453,13 @@ class VRMProcess(Extension):
             data_fields['parent'] = {
                 "key": parent_ticket_key     # Specify the parent ticket key
             }
+        
+        # Check the status of the Jira issue with subtask_ticket_key.
+        # If the status is "Fixed", transition the status to a different state.
+        if ticket['state'] == "Fixed":
+        # Transition the status of the Jira issue
+            transition_response = self.transition_jira_status(subtask_ticket_key)
+            print(transition_response)
 
         response = requests.put(f"{JIRA_API_EDIT_URL}/{subtask_ticket_key}", json={"fields": data_fields}, headers=JIRA_API_HEADER, auth=JIRA_AUTH)
         if response.status_code == 200:
@@ -464,18 +479,17 @@ class VRMProcess(Extension):
             "X-ApiKeys": TENABLE_APIKEY
         }
 
-
         # Get the current time.
-        current_time = datetime.datetime.now()
+        current_time = dt.datetime.now()
 
-        # Calculate the time 24 hours ago from the current time.
-        time_24_hours_ago = current_time - datetime.timedelta(hours=24)
+        # Set the time to the beginning of the day (midnight) for today.
+        beginning_of_day = dt.datetime(current_time.year, current_time.month, current_time.day)
 
-        # Convert the time 24 hours ago to Unix timestamp.
-        since_time = int(time_24_hours_ago.timestamp())
+        # Convert the beginning of the day to Unix timestamp.
+        since_time = int(beginning_of_day.timestamp())
 
         # Print the Unix timestamp for the past 24 hours.
-        print("Unix timestamp for the last 24 hours:", since_time)
+        print("Unix since_time:", since_time)
 
         # API request body
         data = {
@@ -539,7 +553,7 @@ class VRMProcess(Extension):
             response.raise_for_status()  # Raise an exception if there's an error
 
             # Generate filename based on current date and time
-            current_datetime = datetime.datetime.now(pytz.timezone('America/Vancouver')).strftime("%m_%d_%Y_%H_%M_%S_%Z")
+            current_datetime = dt.datetime.now(pytz.timezone('America/Vancouver')).strftime("%m_%d_%Y_%H_%M_%S_%Z")
 
             # Save the downloaded file
             filename = f"./data/vrm_list/vulnerability-{current_datetime}.json"
@@ -626,7 +640,14 @@ class VRMProcess(Extension):
                 created_subtask_ticket_key = self.create_api_subtask_ticket(ticket, parent_ticket_key)
             else: 
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
-            
+
+            # Check the status of the Jira issue with subtask_ticket_key.
+            # If the status is "Fixed", transition the status to a different state.
+            if state == "Fixed":
+            # Transition the status of the Jira issue
+                transition_response = self.transition_jira_status(subtask_ticket_key)
+                print(transition_response)
+
             # Add extracted values to ticket_data dictionary
             tickets.append({
                 "output": output,
@@ -675,3 +696,25 @@ class VRMProcess(Extension):
             ticket_key = response.json()['key']
 
         return ticket_key
+    
+    # Transition a Jira status to a specific status.
+    def transition_jira_status(self, issue_key):
+        print("issue_key : ",issue_key)
+
+        # Request body
+        data = {
+            "transition": {
+                "id": "41"  # Mitigated
+            }
+        }
+
+        # Send POST request to transition the issue
+        response = requests.post(f"{JIRA_API_URL}/{issue_key}/transitions", json=data, headers=JIRA_API_HEADER, auth=JIRA_AUTH)
+        response_message = None
+        # Check if the request was successful
+        if response.status_code == 204:
+            response_message = f"{issue_key} : Issue transitioned successfully."
+        else:
+            response_message = f"Failed to transition issue. Status code: {response.status_code}. Response: {response.text}"
+            
+        return response_message
