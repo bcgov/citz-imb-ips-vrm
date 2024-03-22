@@ -17,11 +17,13 @@ except KeyboardInterrupt:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--filename', help="file name", default='')
+parser.add_argument('--source', help="data source", default='')
 parser.add_argument('--buffer_size', help="Number of samples to be used", default=8192, type=int)
 
 args = parser.parse_args()
 buffer_size = args.buffer_size
 filename = args.filename
+source = args.source
 
 def jsonrpc2_create_id(data):
     return hashlib.sha1(json.dumps(data).encode(client_encoding)).hexdigest()
@@ -44,10 +46,10 @@ def read_in_chunks(file_object, chunk_size=8192):
         yield data
 
 def main(args):
-    if os.path.isfile(filename):
+    if filename and os.path.isfile(filename):
         # make the message
         id, message = jsonrpc2_encode('vrmprocess', {
-            "filename": filename
+            "filename": filename,
         })
         print (message)
 
@@ -67,6 +69,26 @@ def main(args):
                 for chunk in read_in_chunks(f):
                     sock.send(chunk)
                 sock.send(b'')
+
+        # close the connection
+        sock.close()
+
+    elif source and source == "tenable":
+        # make the message
+        id, message = jsonrpc2_encode('vrmprocess', {
+            "source": source,
+        })
+        print (message)
+
+        # connect to server
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(('localhost', 5555))
+
+        # send a message
+        sock.send(message.encode(client_encoding))
+        response = sock.recv(buffer_size)
+        jsondata = json.loads(response.decode(client_encoding))
+        print (jsondata)
 
         # close the connection
         sock.close()
