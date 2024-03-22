@@ -411,7 +411,7 @@ class VRMProcess(Extension):
                 "key": "VULNA"
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
-            "description": f"\n{ticket['name']}\n\nSynopsys:\n{ticket['synopsys']}\n\n Description:\n{ticket['description']}\n\n Solution:\n{ticket['solution']} \n\nOutput:{ticket['output']}",
+            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
             "customfield_10200": ticket['asset_id'], # asset_id
             "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
             "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
@@ -595,6 +595,7 @@ class VRMProcess(Extension):
             cvssv3_score = entry.get("plugin", {}).get("cvss3_base_score")
             vpr_score = entry.get("plugin", {}).get("vpr", {}).get("score")
             asset_id = entry.get("asset", {}).get("uuid")
+            fqdn = entry.get("asset", {}).get("fqdn")
             #vulnerability_id = entry.get("id")
 
             # Resolve asset details using IP address
@@ -621,6 +622,7 @@ class VRMProcess(Extension):
                 'cvssv3_score': cvssv3_score,
                 'vpr_score': vpr_score,
                 'asset_id': asset_id,
+                'fqdn': fqdn
                 #'vulnerability_id': vulnerability_id,
             }
 
@@ -666,8 +668,8 @@ class VRMProcess(Extension):
             "project": {
                 "key": "VULNA"
             },
-            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
-            "description": f"\n{ticket['name']}\n\nSynopsys:\n{ticket['synopsys']}\n\n Description:\n{ticket['description']}\n\n Solution:\n{ticket['solution']} \n\nOutput:{ticket['output']}",
+            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
+            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
             "customfield_10200": ticket['asset_id'], # asset_id
             "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
             "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
