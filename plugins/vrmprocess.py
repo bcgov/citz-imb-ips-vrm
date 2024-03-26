@@ -6,34 +6,42 @@ import psycopg2
 import pytz
 from datetime import datetime
 import datetime as dt
+import logging
 from requests.auth import HTTPBasicAuth
 from decouple import config
 from server import Extension, jsonrpc2_result_encode
 
+# Creating log file name based on current date
+log_filename = datetime.now().strftime("./logs/server/%Y-%m-%d.txt")
+
+# Logging configuration
+logging.basicConfig(filename=log_filename, level=logging.DEBUG, 
+                    format="[ %(asctime)s | %(levelname)s ] %(message)s", 
+                    datefmt="%Y-%m-%d %H:%M:%S")
+
+logger = logging.getLogger()
+
 try: 
     # Attempt to retrieve configuration values from environment variables
-    JIRA_API_URL = config("JIRA_API_URL")
-    JIRA_API_SEARCH_URL = config("JIRA_API_SEARCH_URL")
-    JIRA_API_EDIT_URL = config("JIRA_API_EDIT_URL")
-    JIRA_API_USERNAME = config("JIRA_API_USERNAME")
-    JIRA_API_KEY = config("JIRA_API_KEY")
-    PG_HOST = config("PG_HOST")
-    PG_DBNAME = config("PG_DBNAME")
-    PG_USER = config("PG_USER")
-    PG_PASSWORD = config("PG_PASSWORD")
-    PG_PORT = config("PG_PORT", default=5432, cast=int)
-    TENABLE_APIKEY = config("TENABLE_API_KEY", default='')
-    client_encoding = config("CLIENT_ENCODING", default='utf-8')
+    JIRA_API_URL = config("JIRA_API_URL") # URL for JIRA API
+    JIRA_API_SEARCH_URL = config("JIRA_API_SEARCH_URL") # URL for JIRA search API
+    JIRA_API_EDIT_URL = config("JIRA_API_EDIT_URL") # URL for JIRA edit API
+    JIRA_API_USERNAME = config("JIRA_API_USERNAME") # Username for JIRA API
+    JIRA_API_KEY = config("JIRA_API_KEY") # Key for JIRA API authentication
+    PG_HOST = config("PG_HOST") # PostgreSQL host
+    PG_DBNAME = config("PG_DBNAME") # PostgreSQL database name
+    PG_USER = config("PG_USER") # PostgreSQL username
+    PG_PASSWORD = config("PG_PASSWORD") # PostgreSQL password
+    PG_PORT = config("PG_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
+    TENABLE_APIKEY = config("TENABLE_API_KEY", default='') # Tenable API key, default is empty string
+    client_encoding = config("CLIENT_ENCODING", default='utf-8') # Client encoding, default is utf-8
 except Exception as e:
     # Handle exceptions raised during configuration retrieval
-    print ("[*] Exception: %s" % (str(e)))
+    logger.info ("[*] Exception: %s" % (str(e)))
 
 # Set up JIRA authentication and headers
 JIRA_AUTH = HTTPBasicAuth(JIRA_API_USERNAME, JIRA_API_KEY)
-JIRA_API_HEADER = {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
-}
+JIRA_API_HEADER = config("JIRA_API_HEADER")
 
 class VRMProcess(Extension):
     """
@@ -46,8 +54,10 @@ class VRMProcess(Extension):
 
     """
     def __init__(self):
-        self.type = "rpcmethod"
-        self.method = "vrmprocess"
+        # Initializing attributes
+        self.type = "rpcmethod" # Type attribute
+        self.method = "vrmprocess" # Method attribute
+        # Establishing a PostgreSQL database connection
         self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
 
     # Dispatches the incoming data for processing.
@@ -66,44 +76,46 @@ class VRMProcess(Extension):
             out_filename = "./data/%s.%s" % (now, received_filetype)
 
             # Save file locally
-            print ("[*] writing the file: ", out_filename)
+            logging.info("[*] writing the file: ", out_filename)
             with open(out_filename, 'wb') as f:
                 f.write(data)
 
-            print ("[*] processing the file: ", out_filename)
+            logging.info ("[*] processing the file: ", out_filename)
+            # Processing XLSX file
             if received_filetype == "xlsx":
                 assets = self.process_asset_file(out_filename)
                 result = self.save_assets(assets)
             elif received_filetype == "json":
+                # Processing JSON file
                 tickets = self.process_json_file(out_filename)
-            print ("[*] save done")
+            logging.info ("[*] save done", tickets)
         
         elif 'source' in params and params['source'] == 'tenable':
+            # Requesting export UUID from Tenable
             export_uuid = self.request_export_uuid_from_tenable()
             filename=None
 
             if export_uuid:
-                print ("Queued. export_uuid: %s" % (export_uuid))
+                logging.info ("Queued. export_uuid: %s" % (export_uuid))
                 status = None
                 finished_chunks = 0
                 while status != "FINISHED":
-                    print ("Not finished. Please wait...")
+                    logging.info ("Not finished. Please wait...")
                     _status, _finished_chunks = self.get_status_by_export_uuid_from_tenable(export_uuid)
                     status = _status
                     finished_chunks = _finished_chunks
                     time.sleep(3)
-                print ("Finished. Trying download %s chunks..." % (str(finished_chunks)))
+                logging.info ("Finished. Trying download %s chunks..." % (str(finished_chunks)))
 
                 if finished_chunks > 0:
                     for chunk_id in range(1, finished_chunks + 1):
-                        print ("Downloading the chunk %s..." % (str(chunk_id)))
+                        logger.info ("Downloading the chunk %s..." % (str(chunk_id)))
                         filename = self.download_exported_data_from_tenable(export_uuid, chunk_id)
-                print ("Done.")
-                print("filename : ",filename)
+                logging.info ("Done.")
+                logging.info ("filename : ",filename)
+                # Processing API JSON file
                 tickets = self.process_api_json_file(filename)
-                print ("[*] api data save done")
-
-
+                logging.info ("[*] api data save done")
 
         return jsonrpc2_result_encode(result, id)
 
@@ -118,7 +130,6 @@ class VRMProcess(Extension):
             asset = dict(zip(fieldnames, row))
         else:
             asset = dict(zip(fieldnames, [None, "Unknown Host", '', '', '', '']))
-
         return asset
 
     # Save asset information to the database.
@@ -165,12 +176,13 @@ class VRMProcess(Extension):
             customer_contact = row["Customer Contact"]
             technical_contact = row["Technical Contact"]
 
-            print('index: ', index)
-            print('client_name: ', client_name)
-            print('vip_members: ', vip_members)
-            print('ip_address: ', ip_address)
-            print('customer_contact: ', customer_contact)
-            print('technical_contact: ', technical_contact)
+            logging.info('=======index: ', index, " ==============")
+            logging.info('client_name: ', client_name)
+            logging.info('vip_members: ', vip_members)
+            logging.info('ip_address: ', ip_address)
+            logging.info('customer_contact: ', customer_contact)
+            logging.info('technical_contact: ', technical_contact)
+            logging.info("========================================")
 
             # Create a dictionary for each asset
             asset = {
@@ -180,7 +192,7 @@ class VRMProcess(Extension):
                 'customer_contact': customer_contact,
                 'technical_contact': technical_contact
             }
-
+            
             # Append the asset dictionary to the assets list
             assets.append(asset)
 
@@ -263,7 +275,7 @@ class VRMProcess(Extension):
             # Check the status of the Jira issue with subtask_ticket_key.
             # Transition the status of the Jira issue
             transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
-            print(transition_response)
+            logger.info (transition_response)
             
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -296,13 +308,13 @@ class VRMProcess(Extension):
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
 
         # Check if the request was successful (status code 200)
-        if response.status_code == 200 and response.json().get('issues'):
+        if response.status_code == 200:
             # Get the key of the first issue
-            ticket_key = response.json()['issues'][0]['key']
-            print('ticket key : ',ticket_key)
+            ticket_key = response.json()['key']
+            logger.info('Get Parent-Ticket Key : ',ticket_key)
         else:
             # Handle other error cases
-            print(f"get_parent_ticket_key Response: {response.status_code} - {response.text}")
+            logger.error(f"get_parent_ticket_key Response: {response.status_code} - {response.text}")
 
         return ticket_key
     
@@ -324,12 +336,13 @@ class VRMProcess(Extension):
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
 
         # Check if the request was successful (status code 200)
-        if response.status_code == 200 and response.json().get('issues'):
+        if response.status_code == 200:
             # Get the key of the first issue
-            ticket_key = response.json()['issues'][0]['key']
+            ticket_key = response.json()['key']
+            logger.info('Get Sub-Ticket Key : ',ticket_key)
         else:
             # Handle other error cases
-            print(f"get_sub_ticket_key Response: {response.status_code} - {response.text}")
+            logger.error(f"get_sub_ticket_key Response: {response.status_code} - {response.text}")
 
         return ticket_key    
     
@@ -351,12 +364,13 @@ class VRMProcess(Extension):
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
 
         # Check if the request was successful (status code 200)
-        if response.status_code == 200 and response.json().get('issues'):
+        if response.status_code == 200:
             # Get the key of the first issue
-            ticket_key = response.json()['issues'][0]['key']
+            ticket_key = response.json()['key']
+            logger.info('Find Sub-Ticket Key : ',ticket_key)
         else:
             # Handle other error cases
-            print(f"find_sub_ticket_key_with_pluginID Response: {response.status_code} - {response.text}")
+            logger.error(f"find_sub_ticket_key_with_pluginID Response: {response.status_code} - {response.text}")
 
         return ticket_key    
 
@@ -396,6 +410,7 @@ class VRMProcess(Extension):
         if response.status_code == 201:
             # Extract and return the key of the created ticket
             ticket_key = response.json()["key"]
+            logger.info('Create Parent-Ticket Key : ',ticket_key)
         else:
             # Handle other error cases
             print(f"create_parent_ticket Response: {response.status_code} - {response.text}")
@@ -435,12 +450,13 @@ class VRMProcess(Extension):
         response = requests.post(JIRA_API_URL, json={"fields": data_fields}, headers=JIRA_API_HEADER, auth=JIRA_AUTH)
         if response.status_code == 200:
             ticket_key = response.json()['key']
+            logger.info('Create Sub-Ticket Key : ',ticket_key)
 
         return ticket_key
     
     # Edit an existing sub-task ticket with updated information.
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
-        print("edit_subtask_ticket!!!!!!!!!!!")
+        logger.info('===========edit_subtask_ticket=================')
         ticket_key = None
 
         data_fields = {
@@ -457,11 +473,12 @@ class VRMProcess(Extension):
         # Check the status of the Jira issue with subtask_ticket_key.
         # Transition the status of the Jira issue
         transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
-        print(transition_response)
+        logger.info("transition_response : ",transition_response)
 
         response = requests.put(f"{JIRA_API_EDIT_URL}/{subtask_ticket_key}", json={"fields": data_fields}, headers=JIRA_API_HEADER, auth=JIRA_AUTH)
         if response.status_code == 200:
             ticket_key = response.json()['key']
+            logger.info("edit_subtask_ticket_key : ",ticket_key)
 
         return ticket_key
     
@@ -486,9 +503,6 @@ class VRMProcess(Extension):
         # Convert the beginning of the day to Unix timestamp.
         since_time = int(beginning_of_day.timestamp())
 
-        # Print the Unix timestamp for the past 24 hours.
-        print("Unix since_time:", since_time)
-
         # API request body
         data = {
             'num_assets': num_assets,
@@ -509,7 +523,7 @@ class VRMProcess(Extension):
             return export_uuid  # Return the download URL of the exported file
 
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred during API request: {e}")
+            logger.error(f"An error occurred during API request: {e}")
             return None
 
     def get_status_by_export_uuid_from_tenable(self, export_uuid):
@@ -532,7 +546,7 @@ class VRMProcess(Extension):
             return data.get('status'), data.get('finished_chunks')
 
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred during API request: {e}")
+            logger.error(f"An error occurred during API request: {e}")
             return None, None
         
     def download_exported_data_from_tenable(self, export_uuid, chunk_id=1):
@@ -558,10 +572,10 @@ class VRMProcess(Extension):
             with open(filename, 'wb') as f:
                 f.write(response.content)
 
-            print(f"Exported vulnerabilities chunk {chunk_id} downloaded and saved as {filename}")
+            logger.info(f"Exported vulnerabilities chunk {chunk_id} downloaded and saved as {filename}")
 
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred during API request: {e}")
+            logger.error(f"An error occurred during API request: {e}")
     
         return filename
 
@@ -626,7 +640,7 @@ class VRMProcess(Extension):
                 #'vulnerability_id': vulnerability_id,
             }
 
-            print("TICKET API INFO : ",ticket)
+            logger.info("TICKET API INFO : ",ticket)
 
             # Create parent ticket if it doesn't exist
             if not parent_ticket_key:
@@ -644,7 +658,6 @@ class VRMProcess(Extension):
             # Check the status of the Jira issue with subtask_ticket_key.
             # Transition the status of the Jira issue
             transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
-            print(transition_response)
 
             # Add extracted values to ticket_data dictionary
             tickets.append({
@@ -697,7 +710,6 @@ class VRMProcess(Extension):
     
     # Transition a Jira status to a specific status.
     def transition_jira_status(self, ticket, issue_key):
-        print("issue_key : ",issue_key, ' / ticket state: ',ticket['state'])
         transition_id = None
         # Check the status of the Jira issue with subtask_ticket_key.
         # If the status is "Fixed", transition the status to a different state.
@@ -724,3 +736,24 @@ class VRMProcess(Extension):
             response_message = f"Failed to transition issue. Status code: {response.status_code}. Response: {response.text}"
             
         return response_message
+    
+
+    # This method fetches all asset data from the database.
+    def fetch_asset_data(self):
+        # Establish a cursor for executing SQL commands
+        cur = self.pg_connection.cursor()
+
+        # Execute SQL command to select data from the 'asset' table
+        cur.execute('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset')
+
+        # Fetch all rows from the executed SQL command
+        row = cur.fetchall()
+
+        # Define field names for the asset data
+        fieldnames = ['id', 'client_name', 'vip_members', 'ip_address', 'customer_contact', 'technical_contact']
+        if row:
+            asset = dict(zip(fieldnames, row))
+        else:
+            asset = dict(zip(fieldnames, [None, "Unknown Host", '', '', '', '']))
+
+        return asset
