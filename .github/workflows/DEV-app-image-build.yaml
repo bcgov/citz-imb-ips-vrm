@@ -13,7 +13,6 @@ on:
 jobs:
   # Job to build, tag, and push the APP image
   app-build-tag-push:
-    environment: dev
     runs-on: ubuntu-latest
     steps:
     # Checkout the repository
