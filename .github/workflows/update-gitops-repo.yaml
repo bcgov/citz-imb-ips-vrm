@@ -19,7 +19,6 @@ jobs:
             repo: context.repo.repo,
             state: 'all',
           });
-          console.log(`PRs found: ${pulls.data.length}.`)
           const pr = pulls.find(pr => pr.merge_commit_sha === process.env.GITHUB_SHA);
           if (pr) {
             return pr.number
