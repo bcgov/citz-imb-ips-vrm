@@ -5,20 +5,9 @@ import hashlib
 import argparse
 import json
 import sys
-import logging
 from datetime import datetime
 
 from decouple import config
-
-# Creating log file name based on current date
-log_filename = datetime.now().strftime("./logs/client/%Y-%m-%d.txt")
-
-# Logging configuration
-logging.basicConfig(filename=log_filename, level=logging.DEBUG, 
-                    format="[ %(asctime)s | %(levelname)s ] %(message)s", 
-                    datefmt="%Y-%m-%d %H:%M:%S")
-
-logger = logging.getLogger()
 
 try:
     # Attempt to retrieve the client encoding from configuration, defaulting to 'utf-8' if not specified.
@@ -26,8 +15,8 @@ try:
 except KeyboardInterrupt:
     # Handle the KeyboardInterrupt exception gracefully.
     # Log a message indicating that the user has requested an interrupt.
-    logger.info("\n[*] User has requested an interrupt")
-    logger.info("[*] Application Exiting.....")
+    print("\n[*] User has requested an interrupt")
+    print("[*] Application Exiting.....")
     sys.exit()
 
 parser = argparse.ArgumentParser()
@@ -99,7 +88,7 @@ def main(args):
         id, message = jsonrpc2_encode('vrmprocess', {
             "filename": filename,
         })
-        logger.info (message)
+        print(message)
 
         # connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,7 +98,7 @@ def main(args):
         sock.send(message.encode(client_encoding))
         response = sock.recv(buffer_size)
         jsondata = json.loads(response.decode(client_encoding))
-        logger.info (jsondata)
+        print(jsondata)
 
         # read the file and send to server if accepted
         if jsondata['method'] == "vrmprocess_accept" and jsondata['params']['success'] == True:
@@ -129,7 +118,7 @@ def main(args):
         id, message = jsonrpc2_encode('vrmprocess', {
             "source": source,
         })
-        logger.info (message)
+        print(message)
 
         # connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -139,12 +128,12 @@ def main(args):
         sock.send(message.encode(client_encoding))
         response = sock.recv(buffer_size)
         jsondata = json.loads(response.decode(client_encoding))
-        logger.info (jsondata)
+        print(jsondata)
 
         # close the connection
         sock.close()
 
-    logger.info ("[*] Done")
+    print("[*] Done")
 
 if __name__== "__main__":
     main(sys.argv)
