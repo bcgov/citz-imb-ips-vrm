@@ -290,7 +290,10 @@ class VRMProcess(Extension):
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        jql_query =  f'cf[10234] ~ "{hostname}"'
+        #sandbox account
+        #jql_query =  f'cf[10234] ~ "{hostname}"'
+        #service account
+        jql_query =  f'cf[10293] ~ "{hostname}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -317,7 +320,10 @@ class VRMProcess(Extension):
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        #sandbox account
+        #jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        #service account
+        jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -345,7 +351,10 @@ class VRMProcess(Extension):
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        #sandbox account
+        #jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        #service account
+        jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -390,10 +399,14 @@ class VRMProcess(Extension):
                 "issuetype": {
                     "name": "Task"  # Replace with the appropriate issue type
                 },
-                "customfield_10234": asset['client_name'],  # Host Name
-                "customfield_10235": asset['vip_members'],  # VIP Members
-                "customfield_10236": asset['customer_contact'],  # Customer Contact
-                "customfield_10237": asset['technical_contact']  # Technical Contact
+                # "customfield_10234": asset['client_name'],  # SandBox Host Name
+                # "customfield_10235": asset['vip_members'],  # SandBox VIP Members
+                # "customfield_10236": asset['customer_contact'],  # SandBox Customer Contact
+                # "customfield_10237": asset['technical_contact']  # SandBox Technical Contact
+                "customfield_10293": asset['client_name'],  # Service Host Name
+                "customfield_10294": asset['vip_members'],  # Service VIP Members
+                "customfield_10295": asset['customer_contact'],  # Service Customer Contact
+                "customfield_10296": asset['technical_contact']  # Service Technical Contact
             }
         }
 
@@ -422,16 +435,29 @@ class VRMProcess(Extension):
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
-            "customfield_10200": ticket['asset_id'], # asset_id
-            "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
-            "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
-            "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
-            "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
-            "customfield_10221": ticket['first_seen'], # first_seen
-            "customfield_10222": ticket['last_seen'], # last_seen
-            "customfield_10228": f"{ticket['severity']}", # severity
-            "customfield_10230": ticket['state'], # state
-            "customfield_10207": ticket['ip_address'], # ip_address
+            
+            #service account
+            "customfield_10263": ticket['asset_id'], # asset_id
+            "customfield_10264": ticket['vulnerability_id'], # vulnerability_id
+            "customfield_10271": f"{ticket['cvssv2_score']}", # cvssv2_score
+            "customfield_10273": f"{ticket['cvssv3_score']}", # cvssv3_score
+            "customfield_10275" : f"{ticket['plugin_id']}", # plugin_id
+            "customfield_10281": ticket['first_seen'], # first_seen
+            "customfield_10282": ticket['last_seen'], # last_seen
+            "customfield_10288": f"{ticket['severity']}", # severity
+            "customfield_10289": ticket['state'], # state
+            "customfield_10267": ticket['ip_address'], # ip_address
+            #sandbox account
+            # "customfield_10200": ticket['asset_id'], # asset_id
+            # "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
+            # "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
+            # "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
+            # "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
+            # "customfield_10221": ticket['first_seen'], # first_seen
+            # "customfield_10222": ticket['last_seen'], # last_seen
+            # "customfield_10228": f"{ticket['severity']}", # severity
+            # "customfield_10230": ticket['state'], # state
+            # "customfield_10207": ticket['ip_address'], # ip_address
             "issuetype": {
                 "name": "Sub-task"  
             }
@@ -455,9 +481,14 @@ class VRMProcess(Extension):
         ticket_key = None
 
         data_fields = {
-            "customfield_10222": ticket["last_seen"],
-            "customfield_10228": ticket["severity"],
-            "customfield_10230": ticket["state"]
+            #service account
+            "customfield_10282": ticket["last_seen"],
+            "customfield_10288": ticket["severity"],
+            "customfield_10289": ticket["state"]
+            #sandbox account
+            # "customfield_10222": ticket["last_seen"],
+            # "customfield_10228": ticket["severity"],
+            # "customfield_10230": ticket["state"]
         }
 
         if parent_ticket_key:
@@ -679,15 +710,24 @@ class VRMProcess(Extension):
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
-            "customfield_10200": ticket['asset_id'], # asset_id
-            "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
-            "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
-            "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
-            "customfield_10221": ticket['first_seen'], # first_seen
-            "customfield_10222": ticket['last_seen'], # last_seen
-            "customfield_10228": f"{ticket['severity']}", # severity
-            "customfield_10230": ticket['state'], # state
-            "customfield_10207": ticket['ip_address'], # ip_address
+            "customfield_10263": ticket['asset_id'], # asset_id
+            "customfield_10271": f"{ticket['cvssv2_score']}", # cvssv2_score
+            "customfield_10273": f"{ticket['cvssv3_score']}", # cvssv3_score
+            "customfield_10275" : f"{ticket['plugin_id']}", # plugin_id
+            "customfield_10281": ticket['first_seen'], # first_seen
+            "customfield_10282": ticket['last_seen'], # last_seen
+            "customfield_10288": f"{ticket['severity']}", # severity
+            "customfield_10289": ticket['state'], # state
+            "customfield_10267": ticket['ip_address'], # ip_address            
+            # "customfield_10200": ticket['asset_id'], # asset_id
+            # "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
+            # "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
+            # "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
+            # "customfield_10221": ticket['first_seen'], # first_seen
+            # "customfield_10222": ticket['last_seen'], # last_seen
+            # "customfield_10228": f"{ticket['severity']}", # severity
+            # "customfield_10230": ticket['state'], # state
+            # "customfield_10207": ticket['ip_address'], # ip_address
             "issuetype": {
                 "name": "Sub-task"  
             }
