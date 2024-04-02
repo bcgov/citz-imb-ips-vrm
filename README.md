@@ -1,6 +1,16 @@
 # citz-imb-ips-vrm
 Information Privacy and Security's Vulnerability Risk Management tool
 
+<br>
+
+
+
+
+![vrm_app_architecture](https://github.com/bcgov/citz-imb-ips-vrm/assets/40187625/be6d6694-33e9-47a3-8073-25a309055289)
+
+
+<br>
+
 <!-- GETTING STARTED -->
 ## Getting Started
 
