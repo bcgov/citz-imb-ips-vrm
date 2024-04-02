@@ -3,7 +3,7 @@ version: "3.8"
 services:
 
   db:
-    container_name: vrmprocess_db
+    container_name: db
     image: postgres
     restart: always
     ports:
@@ -14,7 +14,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DBNAME}
 
   pgadmin:
-    container_name: vrmprocess_pgadmin
+    container_name: pgadmin
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
@@ -24,14 +24,24 @@ services:
     depends_on:
       - db
 
-  jsonrpc2:
-    container_name: jsonrpc2
-    build: .
-    command: bash -c "alembic upgrade head && python3 server.py"
+  server:
+    container_name: server
+    build: ./server
+    command: bash -c "alembic upgrade head && python3 ./server/server.py"
     volumes:
       - .:/app
     ports:
       - 5555:5555
     depends_on:
       - db
+    restart: always
+
+  client:
+    container_name: client-scheduler
+    build: ./client
+    command: ["python", "client-scheduler.py", "--source", "tenable"]
+    volumes:
+      - ./client:/app
+    depends_on:
+      - server
     restart: always

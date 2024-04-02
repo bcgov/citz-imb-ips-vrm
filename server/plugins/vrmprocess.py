@@ -382,7 +382,8 @@ class VRMProcess(Extension):
         payload = {
             "fields": {
                 "project": {
-                    "key": "VULNA"  # Replace with your project key
+                    #"key": "VULNA"  # Replace with your project key
+                     "key": "VULN" 
                 },
                 "summary": asset['client_name'],
                 "description": description,
@@ -416,7 +417,8 @@ class VRMProcess(Extension):
 
         data_fields = {
             "project": {
-                "key": "VULNA"
+                #"key": "VULNA"
+                "key": "VULN"
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
@@ -672,7 +674,8 @@ class VRMProcess(Extension):
 
         data_fields = {
             "project": {
-                "key": "VULNA"
+                # "key": "VULNA"
+                "key": "VULN"
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
