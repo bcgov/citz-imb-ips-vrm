@@ -31,3 +31,6 @@ venv.bak/
 
 # VS Code settings
 .vscode/
+
+# Uploaded Files
+data/

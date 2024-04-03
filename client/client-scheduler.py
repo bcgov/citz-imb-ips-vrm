@@ -92,7 +92,7 @@ def main(args):
 
         # connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 5555))
+        sock.connect(('server', 5555))
 
         # send a message
         sock.send(message.encode(client_encoding))
@@ -122,7 +122,7 @@ def main(args):
 
         # connect to server
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 5555))
+        sock.connect(('server', 5555))
 
         # send a message
         sock.send(message.encode(client_encoding))
