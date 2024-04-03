@@ -427,6 +427,7 @@ class VRMProcess(Extension):
     # Create a sub-task ticket based on the provided ticket and parent ticket key.
     def create_subtask_ticket(self, ticket, parent_ticket_key):
         ticket_key = None
+        capitalized_severity = ticket['severity'].capitalize()
 
         data_fields = {
             "project": {
@@ -435,7 +436,9 @@ class VRMProcess(Extension):
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
-            
+            "priority":{
+                "name": f"{capitalized_severity}"
+            },
             #service account
             "customfield_10263": ticket['asset_id'], # asset_id
             "customfield_10264": ticket['vulnerability_id'], # vulnerability_id
@@ -444,7 +447,7 @@ class VRMProcess(Extension):
             "customfield_10275" : f"{ticket['plugin_id']}", # plugin_id
             "customfield_10281": ticket['first_seen'], # first_seen
             "customfield_10282": ticket['last_seen'], # last_seen
-            "customfield_10288": f"{ticket['severity']}", # severity
+            "customfield_10288": f"{capitalized_severity}", # severity
             "customfield_10289": ticket['state'], # state
             "customfield_10267": ticket['ip_address'], # ip_address
             #sandbox account
@@ -479,12 +482,13 @@ class VRMProcess(Extension):
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
         print('===========edit_subtask_ticket=================')
         ticket_key = None
-
+        capitalized_severity = ticket['severity'].capitalize()
         data_fields = {
             #service account
             "customfield_10282": ticket["last_seen"],
-            "customfield_10288": ticket["severity"],
-            "customfield_10289": ticket["state"]
+            "customfield_10288": capitalized_severity,
+            "customfield_10289": ticket["state"],
+            "priority": { "name":capitalized_severity }
             #sandbox account
             # "customfield_10222": ticket["last_seen"],
             # "customfield_10228": ticket["severity"],
@@ -702,6 +706,7 @@ class VRMProcess(Extension):
     # Create a sub-task ticket based on the provided ticket and parent ticket key.
     def create_api_subtask_ticket(self, ticket, parent_ticket_key):
         ticket_key = None
+        capitalized_severity = ticket['severity'].capitalize()
 
         data_fields = {
             "project": {
@@ -710,13 +715,16 @@ class VRMProcess(Extension):
             },
             "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
             "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
+            "priority":{
+                "name": f"{capitalized_severity}"
+            },
             "customfield_10263": ticket['asset_id'], # asset_id
             "customfield_10271": f"{ticket['cvssv2_score']}", # cvssv2_score
             "customfield_10273": f"{ticket['cvssv3_score']}", # cvssv3_score
             "customfield_10275" : f"{ticket['plugin_id']}", # plugin_id
             "customfield_10281": ticket['first_seen'], # first_seen
             "customfield_10282": ticket['last_seen'], # last_seen
-            "customfield_10288": f"{ticket['severity']}", # severity
+            "customfield_10288": f"{capitalized_severity}", # severity
             "customfield_10289": ticket['state'], # state
             "customfield_10267": ticket['ip_address'], # ip_address            
             # "customfield_10200": ticket['asset_id'], # asset_id
