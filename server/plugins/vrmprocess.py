@@ -378,6 +378,7 @@ class VRMProcess(Extension):
 
     # Create a parent ticket based on the provided asset information.
     def create_parent_ticket(self, asset):
+        print('===========create_parent_ticket=================')
         ticket_key = None
         description = ""
         vip_members = asset.get('vip_members')
@@ -701,6 +702,7 @@ class VRMProcess(Extension):
     
     # Create a sub-task ticket based on the provided ticket and parent ticket key.
     def create_api_subtask_ticket(self, ticket, parent_ticket_key):
+        print('===========create_api_subtask_ticket=================')
         ticket_key = None
 
         data_fields = {
@@ -747,13 +749,18 @@ class VRMProcess(Extension):
     # Transition a Jira status to a specific status.
     def transition_jira_status(self, ticket, issue_key):
         transition_id = None
-        # Check the status of the Jira issue with subtask_ticket_key.
+        
+        # Get the current status of the Jira issue with subtask_ticket_key.
+        current_status = self.get_current_status(issue_key)
+
         # If the status is "Fixed", transition the status to a different state.
         if ticket['state'] == "Fixed":
         # Transition the status of the Jira issue
             transition_id = "41" # Mitigated
         else:
-            transition_id = "21" # Active
+            # Transition the status of the Jira issue to Active if it's not already in Mitigated state
+            if current_status != "Accepted":
+                transition_id = "21" # Active
 
         # Request body
         data = {
@@ -794,3 +801,15 @@ class VRMProcess(Extension):
 
         return asset
     
+    def get_current_status(self, issue_key):
+        print('===========get_current_status=================')
+        response = requests.get(f"{JIRA_API_URL}/rest/api/2/issue/{issue_key}", headers=JIRA_API_HEADER, auth=JIRA_AUTH)
+
+        if response.status_code == 200:
+            issue_details = response.json()
+            current_status = issue_details['fields']['status']['name']
+            print('current_status: ', current_status)
+            return current_status
+        else:
+            print("Failed to fetch issue details.")
+            return None
