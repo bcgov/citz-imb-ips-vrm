@@ -41,6 +41,10 @@ jobs:
       run: |
         docker-compose -f ${{ vars.COMPOSE_FILE_NAME }} build ${{ vars.CLIENT_SERVICE_NAME }}
 
+    - name: Docker Images List
+      run: |
+        docker images
+
     # Tag the image
     - name: Tag Image
       run: |
