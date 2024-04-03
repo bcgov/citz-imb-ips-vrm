@@ -51,11 +51,12 @@ jobs:
         FILE_PATH="citz-imb-vrm/values.yaml"
         NEW_TAG="${{ steps.get-pr-number.outputs.result }}"
 
-        yq e ".image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        yq e "client.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        yq e "server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
 
         git config user.email "brandon.bouchard@gov.bc.ca"
         git config user.name "Bottle7"
 
         git add "$FILE_PATH"
-        git commit -m "Update backend image tag to $NEW_TAG"
+        git commit -m "Update image tags to $NEW_TAG"
         git push

@@ -1,5 +1,5 @@
-# GitHub Actions workflow for building and tagging the APP image on PR
-name: DEV App Build on PR
+# GitHub Actions workflow for building and tagging an image on PR
+name: Server Image Build on PR
 
 on:
   pull_request:
@@ -9,9 +9,11 @@ on:
     - ready_for_review
     branches:
     - main
+    paths:
+    - server/**
 
 jobs:
-  # Job to build, tag, and push the APP image
+  # Job to build, tag, and push the image
   app-build-tag-push:
     runs-on: ubuntu-latest
     steps:
@@ -29,26 +31,22 @@ jobs:
         openshift_token: ${{ secrets.OPENSHIFT_SA_TOOLS_TOKEN }}
         namespace: ${{ secrets.OPENSHIFT_TOOLS_NAMESPACE }}
 
-    # Login to BC Gov Artifactory Docker Image Repository
+    # Login to Sandbox Artifactory Docker Image Repository
     - name: Login to Artifactory
       run : |
         docker login ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }} -u ${{ secrets.ARTIFACTORY_SA_NAME }} -p ${{ secrets.ARTIFACTORY_SA_PASSWORD }}
 
-    # Build the APP image
-    - name: Build APP Image
+    # Build the image
+    - name: Build Image
       run: |
-        docker-compose -f ${{ vars.COMPOSE_FILE_NAME }} build ${{ vars.APP_NAME }}
+        docker-compose -f ${{ vars.COMPOSE_FILE_NAME }} build ${{ vars.SERVER_SERVICE_NAME }}
 
-    # Debug
-    - name: List Images
-      run: docker images
-
-    # Tag the APP image
-    - name: Tag APP Image
+    # Tag the image
+    - name: Tag Image
       run: |
-        docker tag citz-imb-ips-vrm_${{ vars.APP_NAME }} ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-app:${{github.event.pull_request.number}}
+        docker tag server_${{ vars.SERVER_SERVICE_NAME }} ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-server:${{github.event.pull_request.number}}
 
-    # Push the APP image
-    - name: Push APP Image
+    # Push the image
+    - name: Push Image
       run: |
-        docker push ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-app:${{ github.event.pull_request.number }}
+        docker push ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-server:${{ github.event.pull_request.number }}
