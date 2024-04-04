@@ -53,7 +53,7 @@ jobs:
         FILE_PATH="citz-imb-vrm/values.yaml"
         NEW_TAG="${{ steps.get-pr-number.outputs.result }}"
 
-        yq e "server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        yq e ".server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
 
         git config user.email "brandon.bouchard@gov.bc.ca"
         git config user.name "Bottle7"
