@@ -1,4 +1,4 @@
-name: Update Client Image Tag in GitOps Repo
+name: Update Image Tag in GitOps Repo
 
 on:
   push:
@@ -22,11 +22,13 @@ jobs:
             state: 'all',
           });
           const pr = pulls.find(pr => pr.merge_commit_sha === process.env.GITHUB_SHA);
+
           if (pr) {
             return pr.number
           } else {
             return ''
           }
+
         result-encoding: string
 
       # Install yaml parser
@@ -53,11 +55,27 @@ jobs:
         FILE_PATH="citz-imb-vrm/values.yaml"
         NEW_TAG="${{ steps.get-pr-number.outputs.result }}"
 
-        yq e ".client.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        # Check which source has changes, then update the corresponding image tag
+        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'server/'; then
+          yq e ".server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        fi
+
+        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'client/'; then
+          yq e ".client.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
+        fi
 
         git config user.email "brandon.bouchard@gov.bc.ca"
         git config user.name "Bottle7"
 
         git add "$FILE_PATH"
-        git commit -m "Update client image tag to $NEW_TAG"
+
+
+        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'server/'; then
+          git commit -m "Update server image tag to $NEW_TAG"
+        fi
+
+        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'client/'; then
+          git commit -m "Update client image tag to $NEW_TAG"
+        fi
+
         git push
