@@ -10,7 +10,7 @@ from requests.auth import HTTPBasicAuth
 from decouple import config
 from server import Extension, jsonrpc2_result_encode
 
-try: 
+try:
     # Attempt to retrieve configuration values from environment variables
     JIRA_API_URL = config("JIRA_API_URL") # URL for JIRA API
     JIRA_API_SEARCH_URL = config("JIRA_API_SEARCH_URL") # URL for JIRA search API
@@ -18,7 +18,7 @@ try:
     JIRA_API_USERNAME = config("JIRA_API_USERNAME") # Username for JIRA API
     JIRA_API_KEY = config("JIRA_API_KEY") # Key for JIRA API authentication
     PG_HOST = config("POSTGRES_HOST") # PostgreSQL host
-    PG_DBNAME = config("POSTGRES_DBNAME") # PostgreSQL database name
+    PG_DBNAME = config("POSTGRES_DB") # PostgreSQL database name
     PG_USER = config("POSTGRES_USER") # PostgreSQL username
     PG_PASSWORD = config("POSTGRES_PASSWORD") # PostgreSQL password
     PG_PORT = config("POSTGRES_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
@@ -81,7 +81,7 @@ class VRMProcess(Extension):
                 # Processing JSON file
                 tickets = self.process_json_file(out_filename)
             print("[*] save done")
-        
+
         elif 'source' in params and params['source'] == 'tenable':
             # Requesting export UUID from Tenable
             export_uuid = self.request_export_uuid_from_tenable()
@@ -148,7 +148,7 @@ class VRMProcess(Extension):
         return {
             "success": True
         }
-    
+
     # Process an Excel file containing asset information.
     def process_asset_file(self, file_path):
         # Read data from the Excel file
@@ -186,13 +186,13 @@ class VRMProcess(Extension):
                 'customer_contact': customer_contact,
                 'technical_contact': technical_contact
             }
-            
+
             # Append the asset dictionary to the assets list
             assets.append(asset)
 
         return assets
 
-    # Parse a JSON file containing vulnerability data. 
+    # Parse a JSON file containing vulnerability data.
     # Create JIRA API tickets for each entry.
     def process_json_file(self, file_path):
         # Load JSON data from the file
@@ -210,12 +210,12 @@ class VRMProcess(Extension):
             output = entry.get("output")
             severity = entry.get("severity")
             state = entry.get("state")
-            name = entry.get("definition", {}).get("name") 
-            solution = entry.get("definition", {}).get("solution") 
-            description = entry.get("definition", {}).get("description") 
+            name = entry.get("definition", {}).get("name")
+            solution = entry.get("definition", {}).get("solution")
+            description = entry.get("definition", {}).get("description")
             synopsys = entry.get("definition", {}).get("synopsis")
             plugin_id = entry.get("definition", {}).get("id")
-            ip_address = entry.get("asset", {}).get("display_ipv4_address") 
+            ip_address = entry.get("asset", {}).get("display_ipv4_address")
             first_seen = entry.get("first_observed")
             last_seen = entry.get("last_seen")
             cvssv2_score = entry.get("definition", {}).get("cvss2", {}).get("base_score")
@@ -227,11 +227,11 @@ class VRMProcess(Extension):
 
             # Resolve asset details using IP address
             asset = self.resolve_reverse_ip(ip_address)
-            
+
             # Check if parent ticket exists using client name
             parent_ticket_key = self.get_parent_ticket_key(asset['client_name'])
 
-            # Map data to ticket object    
+            # Map data to ticket object
             ticket = {
                 'client_name': asset['client_name'],
                 'name': name,
@@ -255,22 +255,22 @@ class VRMProcess(Extension):
 
             # Create parent ticket if it doesn't exist
             if not parent_ticket_key:
-                parent_ticket_key = self.create_parent_ticket(asset) 
-                
+                parent_ticket_key = self.create_parent_ticket(asset)
+
             # Check for sub-task ticket
             subtask_ticket_key= self.get_sub_ticket_key(plugin_id, ip_address)
 
             # Create sub-task ticket if it doesn't exist, otherwise edit existing sub-task ticket
             if not subtask_ticket_key:
                 created_subtask_ticket_key = self.create_subtask_ticket(ticket, parent_ticket_key)
-            else: 
+            else:
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
 
             # Check the status of the Jira issue with subtask_ticket_key.
             # Transition the status of the Jira issue
             transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
             print(transition_response)
-            
+
             # Add extracted values to ticket_data dictionary
             tickets.append({
                 "output": output,
@@ -284,7 +284,7 @@ class VRMProcess(Extension):
             })
 
         return tickets
-    
+
     # Retrieve the key of the parent ticket associated with the given hostname.
     def get_parent_ticket_key(self, hostname):
         ticket_key = None
@@ -300,7 +300,7 @@ class VRMProcess(Extension):
             "jql": jql_query,
             "fields": ["key", "summary"]  # Optional: specify fields to retrieve
         }
-        
+
         # Send POST request to execute the JQL query and retrieve matching issues
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
         # Check if the request was successful (status code 200)
@@ -313,7 +313,7 @@ class VRMProcess(Extension):
             print(f"get_parent_ticket_key Response: {response.status_code} - {response.text}")
 
         return ticket_key
-    
+
     # Retrieve the key of the sub-task ticket associated with the given vulnerability ID.
     def get_sub_ticket_key(self, plugin_id, ip_address):
 
@@ -330,7 +330,7 @@ class VRMProcess(Extension):
             "jql": jql_query,
             "fields": ["key", "summary"]  # Optional: specify fields to retrieve
         }
-        
+
         # Send POST request to execute the JQL query and retrieve matching issues
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
 
@@ -343,8 +343,8 @@ class VRMProcess(Extension):
             # Handle other error cases
             print(f"get_sub_ticket_key Response: {response.status_code} - {response.text}")
 
-        return ticket_key    
-    
+        return ticket_key
+
         # Retrieve the key of the sub-task ticket associated with the given vulnerability ID.
     def find_sub_ticket_key_with_pluginID(self, plugin_id, ip_address):
 
@@ -361,7 +361,7 @@ class VRMProcess(Extension):
             "jql": jql_query,
             "fields": ["key", "summary"]  # Optional: specify fields to retrieve
         }
-        
+
         # Send POST request to execute the JQL query and retrieve matching issues
         response = requests.post(JIRA_API_SEARCH_URL, json=payload, auth=JIRA_AUTH)
 
@@ -374,7 +374,7 @@ class VRMProcess(Extension):
             # Handle other error cases
             print(f"find_sub_ticket_key_with_pluginID Response: {response.status_code} - {response.text}")
 
-        return ticket_key    
+        return ticket_key
 
     # Create a parent ticket based on the provided asset information.
     def create_parent_ticket(self, asset):
@@ -387,13 +387,13 @@ class VRMProcess(Extension):
             # If 'vip_members' value is empty or NaN, use 'client_name'
             if vip_members in ["NaN", None]:
                description = "Task related to asset {}".format(asset.get('client_name', 'Unknown Host'))
-            
+
         # Define the payload for the POST request to create the parent ticket
         payload = {
             "fields": {
                 "project": {
                     #"key": "VULNA"  # Replace with your project key
-                     "key": "VULN" 
+                     "key": "VULN"
                 },
                 "summary": asset['client_name'],
                 "description": description,
@@ -422,7 +422,7 @@ class VRMProcess(Extension):
         else:
             # Handle other error cases
             print(f"create_parent_ticket Response: {response.status_code} - {response.text}")
-        
+
         return ticket_key
 
     # Create a sub-task ticket based on the provided ticket and parent ticket key.
@@ -463,7 +463,7 @@ class VRMProcess(Extension):
             # "customfield_10230": ticket['state'], # state
             # "customfield_10207": ticket['ip_address'], # ip_address
             "issuetype": {
-                "name": "Sub-task"  
+                "name": "Sub-task"
             }
         }
 
@@ -478,7 +478,7 @@ class VRMProcess(Extension):
             print('Create Sub-Ticket Key : ',ticket_key)
 
         return ticket_key
-    
+
     # Edit an existing sub-task ticket with updated information.
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
         print('===========edit_subtask_ticket=================')
@@ -500,7 +500,7 @@ class VRMProcess(Extension):
             data_fields['parent'] = {
                 "key": parent_ticket_key     # Specify the parent ticket key
             }
-        
+
         # Check the status of the Jira issue with subtask_ticket_key.
         # Transition the status of the Jira issue
         transition_response = self.transition_jira_status(ticket, subtask_ticket_key)
@@ -512,7 +512,7 @@ class VRMProcess(Extension):
             print("edit_subtask_ticket_key : ",ticket_key)
 
         return ticket_key
-    
+
     def request_export_uuid_from_tenable(self, num_assets = 86299710):
 
         # API endpoint
@@ -579,7 +579,7 @@ class VRMProcess(Extension):
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during API request: {e}")
             return None, None
-        
+
     def download_exported_data_from_tenable(self, export_uuid, chunk_id=1):
         # API endpoint
         url = f'https://cloud.tenable.com/vulns/export/{export_uuid}/chunks/{chunk_id}'
@@ -607,10 +607,10 @@ class VRMProcess(Extension):
             print(f"Exported vulnerabilities chunk {chunk_id} downloaded and saved as {filename}")
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during API request: {e}")
-    
+
         return filename
 
-    # Parse a JSON file containing vulnerability data. 
+    # Parse a JSON file containing vulnerability data.
     # Create JIRA API tickets for each entry.
     def process_api_json_file(self, file_path):
         # Load JSON data from the file
@@ -628,12 +628,12 @@ class VRMProcess(Extension):
             output = entry.get("output")
             severity = entry.get("severity")
             state = entry.get("state")
-            name = entry.get("plugin", {}).get("name") 
-            solution = entry.get("plugin", {}).get("solution") 
-            description = entry.get("plugin", {}).get("description") 
+            name = entry.get("plugin", {}).get("name")
+            solution = entry.get("plugin", {}).get("solution")
+            description = entry.get("plugin", {}).get("description")
             synopsys = entry.get("plugin", {}).get("synopsis")
             plugin_id = entry.get("plugin", {}).get("id")
-            ip_address = entry.get("asset", {}).get("ipv4") 
+            ip_address = entry.get("asset", {}).get("ipv4")
             first_seen = entry.get("first_found")
             last_seen = entry.get("last_found")
             cvssv2_score = entry.get("plugin", {}).get("cvss_base_score")
@@ -645,11 +645,11 @@ class VRMProcess(Extension):
 
             # Resolve asset details using IP address
             asset = self.resolve_reverse_ip(ip_address)
-            
+
             # Check if parent ticket exists using client name
             parent_ticket_key = self.get_parent_ticket_key(asset['client_name'])
 
-            # Map data to ticket object    
+            # Map data to ticket object
             ticket = {
                 'client_name': asset['client_name'],
                 'name': name,
@@ -675,15 +675,15 @@ class VRMProcess(Extension):
 
             # Create parent ticket if it doesn't exist
             if not parent_ticket_key:
-                parent_ticket_key = self.create_parent_ticket(asset) 
-                
+                parent_ticket_key = self.create_parent_ticket(asset)
+
             # Check for sub-task ticket
             subtask_ticket_key= self.find_sub_ticket_key_with_pluginID(plugin_id, ip_address)
 
             # Create sub-task ticket if it doesn't exist, otherwise edit existing sub-task ticket
             if not subtask_ticket_key:
                 created_subtask_ticket_key = self.create_api_subtask_ticket(ticket, parent_ticket_key)
-            else: 
+            else:
                 subtask_ticket_key = self.edit_subtask_ticket(ticket, parent_ticket_key, subtask_ticket_key)
 
             # Check the status of the Jira issue with subtask_ticket_key.
@@ -703,7 +703,7 @@ class VRMProcess(Extension):
             })
 
         return tickets
-    
+
     # Create a sub-task ticket based on the provided ticket and parent ticket key.
     def create_api_subtask_ticket(self, ticket, parent_ticket_key):
         print('===========create_api_subtask_ticket=================')
@@ -728,7 +728,7 @@ class VRMProcess(Extension):
             "customfield_10282": ticket['last_seen'], # last_seen
             "customfield_10288": f"{capitalized_severity}", # severity
             "customfield_10289": ticket['state'], # state
-            "customfield_10267": ticket['ip_address'], # ip_address            
+            "customfield_10267": ticket['ip_address'], # ip_address
             # "customfield_10200": ticket['asset_id'], # asset_id
             # "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
             # "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
@@ -739,7 +739,7 @@ class VRMProcess(Extension):
             # "customfield_10230": ticket['state'], # state
             # "customfield_10207": ticket['ip_address'], # ip_address
             "issuetype": {
-                "name": "Sub-task"  
+                "name": "Sub-task"
             }
         }
 
@@ -753,11 +753,11 @@ class VRMProcess(Extension):
             ticket_key = response.json()['key']
 
         return ticket_key
-    
+
     # Transition a Jira status to a specific status.
     def transition_jira_status(self, ticket, issue_key):
         transition_id = None
-        
+
         # Get the current status of the Jira issue with subtask_ticket_key.
         current_status = self.get_current_status(issue_key)
 
@@ -785,9 +785,9 @@ class VRMProcess(Extension):
             response_message = f"{issue_key} : Issue transitioned successfully."
         else:
             response_message = f""
-            
+
         return response_message
-    
+
 
     # This method fetches all asset data from the database.
     def fetch_asset_data(self):
@@ -808,7 +808,7 @@ class VRMProcess(Extension):
             asset = dict(zip(fieldnames, [None, "Unknown Host", '', '', '', '']))
 
         return asset
-    
+
     def get_current_status(self, issue_key):
         print('===========get_current_status=================')
         response = requests.get(f"{JIRA_API_URL}/rest/api/2/issue/{issue_key}", headers=JIRA_API_HEADER, auth=JIRA_AUTH)
