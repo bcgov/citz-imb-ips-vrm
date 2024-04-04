@@ -44,7 +44,7 @@ jobs:
     # Tag the image
     - name: Tag Image
       run: |
-        docker tag client_${{ vars.CLIENT_SERVICE_NAME }} ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-client:${{github.event.pull_request.number}}
+        docker tag citz-imb-ips-vrm_${{ vars.CLIENT_SERVICE_NAME }} ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-client:${{github.event.pull_request.number}}
 
     # Push the image
     - name: Push Image
