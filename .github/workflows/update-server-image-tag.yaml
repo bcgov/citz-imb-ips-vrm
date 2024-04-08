@@ -5,7 +5,6 @@ on:
     branches:
     - main
     paths:
-    - client/**
     - server/**
 
 jobs:
@@ -56,27 +55,13 @@ jobs:
         FILE_PATH="citz-imb-vrm/values.yaml"
         NEW_TAG="${{ steps.get-pr-number.outputs.result }}"
 
-        # Check which source has changes, then update the corresponding image tag
-        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'server/'; then
-          yq e ".server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
-        fi
-
-        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'client/'; then
-          yq e ".client.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
-        fi
+        yq e ".server.image.tag = \"$NEW_TAG\"" -i "$FILE_PATH"
 
         git config user.email "brandon.bouchard@gov.bc.ca"
         git config user.name "Bottle7"
 
         git add "$FILE_PATH"
 
-
-        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'server/'; then
-          git commit -m "Update server image tag to $NEW_TAG"
-        fi
-
-        if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q 'client/'; then
-          git commit -m "Update client image tag to $NEW_TAG"
-        fi
+        git commit -m "Update server image tag to $NEW_TAG"
 
         git push
