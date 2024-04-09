@@ -17,11 +17,11 @@ try:
     JIRA_API_EDIT_URL = config("JIRA_API_EDIT_URL") # URL for JIRA edit API
     JIRA_API_USERNAME = config("JIRA_API_USERNAME") # Username for JIRA API
     JIRA_API_KEY = config("JIRA_API_KEY") # Key for JIRA API authentication
-    PG_HOST = config("POSTGRES_HOST") # PostgreSQL host
+    PG_HOST = config("POSTGRESQL_HOST") # PostgreSQL host
     PG_DBNAME = config("POSTGRESQL_DATABASE") # PostgreSQL database name
     PG_USER = config("POSTGRESQL_USER") # PostgreSQL username
     PG_PASSWORD = config("POSTGRESQL_PASSWORD") # PostgreSQL password
-    PG_PORT = config("POSTGRES_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
+    PG_PORT = config("POSTGRESQL_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
     TENABLE_APIKEY = config("TENABLE_API_KEY") # Tenable API key, default is empty string
     client_encoding = config("CLIENT_ENCODING", default='utf-8') # Client encoding, default is utf-8
     # Set up JIRA authentication and headers
