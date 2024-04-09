@@ -480,7 +480,7 @@ class VRMProcess(Extension):
     def edit_subtask_ticket(self, ticket, parent_ticket_key, subtask_ticket_key):
         print('===========edit_subtask_ticket=================')
         ticket_key = None
-
+        print("state: ",ticket["state"], )
         data_fields = {
             #service account
             "customfield_10282": ticket["last_seen"],
@@ -535,7 +535,8 @@ class VRMProcess(Extension):
             'num_assets': num_assets,
             "filters": {
                 "severity": ["high", "critical","medium"],
-                "since": since_time
+                "since": since_time,
+                "state": ["open", "fixed", "reopened"]
             }
         }
 
@@ -754,7 +755,7 @@ class VRMProcess(Extension):
         current_status = self.get_current_status(issue_key)
 
         # If the status is "Fixed", transition the status to a different state.
-        if ticket['state'] == "Fixed":
+        if ticket['state'] == "FIXED":
         # Transition the status of the Jira issue
             transition_id = "41" # Mitigated
         else:
@@ -802,8 +803,8 @@ class VRMProcess(Extension):
         return asset
     
     def get_current_status(self, issue_key):
-        print('===========get_current_status=================')
-        response = requests.get(f"{JIRA_API_URL}/rest/api/2/issue/{issue_key}", headers=JIRA_API_HEADER, auth=JIRA_AUTH)
+        print('===========get_current_status================= : ',issue_key)
+        response = requests.get(f"{JIRA_API_URL}/{issue_key}", headers=JIRA_API_HEADER, auth=JIRA_AUTH)
 
         if response.status_code == 200:
             issue_details = response.json()
