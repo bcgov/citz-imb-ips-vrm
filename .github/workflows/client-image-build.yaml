@@ -1,0 +1,53 @@
+# GitHub Actions workflow for building and tagging an image on PR
+name: Client Image Build on PR
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - ready_for_review
+    branches:
+    - main
+    paths:
+    - client/**
+
+jobs:
+  # Job to build, tag, and push the image
+  app-build-tag-push:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout the repository
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Login to the Openshift Cluster
+    - name: Login to Openshift
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: ${{ secrets.OPENSHIFT_SERVER_URL }}
+        openshift_token: ${{ secrets.OPENSHIFT_SA_TOOLS_TOKEN }}
+        namespace: ${{ secrets.OPENSHIFT_TOOLS_NAMESPACE }}
+
+    # Login to Sandbox Artifactory Docker Image Repository
+    - name: Login to Artifactory
+      run : |
+        docker login ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }} -u ${{ secrets.ARTIFACTORY_SA_NAME }} -p ${{ secrets.ARTIFACTORY_SA_PASSWORD }}
+
+    # Build the image
+    - name: Build Image
+      run: |
+        docker-compose -f ${{ vars.COMPOSE_FILE_NAME }} build ${{ vars.CLIENT_SERVICE_NAME }}
+
+    # Tag the image
+    - name: Tag Image
+      run: |
+        docker tag citz-imb-ips-vrm_${{ vars.CLIENT_SERVICE_NAME }} ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-client:${{github.event.pull_request.number}}
+
+    # Push the image
+    - name: Push Image
+      run: |
+        docker push ${{ secrets.ARTIFACTORY_IMAGE_REPOSITORY }}/vrm-client:${{ github.event.pull_request.number }}
+
