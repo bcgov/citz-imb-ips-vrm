@@ -27,9 +27,9 @@ services:
   server:
     container_name: server
     build: ./server
-    command: bash -c "alembic upgrade head && python3 ./server/server.py"
+    command: bash -c "alembic upgrade head && python3 ./server.py"
     volumes:
-      - .:/app
+      - ./server:/app
     ports:
       - 5555:5555
     depends_on:
