@@ -18,11 +18,11 @@ try:
     JIRA_API_EDIT_URL = config("JIRA_API_EDIT_URL") # URL for JIRA edit API
     JIRA_API_USERNAME = config("JIRA_API_USERNAME") # Username for JIRA API
     JIRA_API_KEY = config("JIRA_API_KEY") # Key for JIRA API authentication
-    PG_HOST = config("POSTGRES_HOST") # PostgreSQL host
-    PG_DBNAME = config("POSTGRES_DBNAME") # PostgreSQL database name
-    PG_USER = config("POSTGRES_USER") # PostgreSQL username
-    PG_PASSWORD = config("POSTGRES_PASSWORD") # PostgreSQL password
-    PG_PORT = config("POSTGRES_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
+    PG_HOST = config("POSTGRESQL_HOST") # PostgreSQL host
+    PG_DBNAME = config("POSTGRESQL_DATABASE") # PostgreSQL database name
+    PG_USER = config("POSTGRESQL_USER") # PostgreSQL username
+    PG_PASSWORD = config("POSTGRESQL_PASSWORD") # PostgreSQL password
+    PG_PORT = config("POSTGRESQL_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
     TENABLE_APIKEY = config("TENABLE_API_KEY") # Tenable API key, default is empty string
     client_encoding = config("CLIENT_ENCODING", default='utf-8') # Client encoding, default is utf-8
     # Set up JIRA authentication and headers
@@ -62,7 +62,7 @@ class VRMProcess(Extension):
             Extension.send_accept(conn, self.method, True)
 
             # Get file data
-            data = Extension.readall(conn) 
+            data = Extension.readall(conn)
             now = datetime.now().strftime("%Y%m%d%H%M%S")
             received_filename = params['filename']
             received_filetype = received_filename.split('.')[-1]
@@ -764,7 +764,7 @@ class VRMProcess(Extension):
         transition_id = None
         # manager = TicketManager()
         # manager.transition_ticket_status()
-        
+
         # Get the current status of the Jira issue with subtask_ticket_key.
         current_status = self.get_current_status(issue_key)
 
@@ -790,7 +790,7 @@ class VRMProcess(Extension):
         # Request body
         data = {
             "transition": {
-                "id": transition_id 
+                "id": transition_id
             }
         }
 
@@ -842,7 +842,7 @@ class VRMProcess(Extension):
 
     # Creates a comment for the specified JIRA issue when the status is changed.
     # Vulnerable --> Mitigated (Issue is fixed)
-    # Mitigated --> Vulnerable (Issue is reopened)    
+    # Mitigated --> Vulnerable (Issue is reopened)
     def create_comment_by_issue_key(self, issue_key, current_status, changed_status):
 
         response_message = None
@@ -875,4 +875,4 @@ class VRMProcess(Extension):
         else:
             print("Failed to add comment.")
             return None
-        
+
