@@ -63,7 +63,6 @@ class VRMProcess(Extension):
 
             # Get file data
             data = Extension.readall(conn) 
-            print('왜 이러지 : ',data)
             now = datetime.now().strftime("%Y%m%d%H%M%S")
             received_filename = params['filename']
             received_filetype = received_filename.split('.')[-1]
