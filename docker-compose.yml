@@ -11,8 +11,9 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRESQL_USER}
       - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
-      - POSTGRES_DB=${POSTGRESQL_DBNAME}
-    volumes: 
+      - POSTGRES_DB=${POSTGRESQL_DATABASE}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
       - ./create-db.sql:/docker-entrypoint-initdb.d/create_database.sql
 
   pgadmin:
