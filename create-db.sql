@@ -1,0 +1,1 @@
+CREATE DATABASE vrmprocess_db OWNER postgres;
