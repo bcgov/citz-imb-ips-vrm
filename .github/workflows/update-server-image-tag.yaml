@@ -1,4 +1,4 @@
-name: Update Image Tag in GitOps Repo
+name: Update Server Image Tag in GitOps Repo
 
 on:
   push:
