@@ -25,6 +25,7 @@ try:
     PG_PORT = config("POSTGRESQL_PORT", default=5432, cast=int) # PostgreSQL port, default is 5432
     TENABLE_APIKEY = config("TENABLE_API_KEY") # Tenable API key, default is empty string
     client_encoding = config("CLIENT_ENCODING", default='utf-8') # Client encoding, default is utf-8
+    environment = config("ENVIRONMENT") # Reading environment variables from the configuration file
     # Set up JIRA authentication and headers
     JIRA_AUTH = HTTPBasicAuth(JIRA_API_USERNAME, JIRA_API_KEY)
 
@@ -52,6 +53,12 @@ class VRMProcess(Extension):
         self.method = "vrmprocess" # Method attribute
         # Establishing a PostgreSQL database connection
         self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
+
+        if environment == "dev":
+            print("Dev Environment")
+        elif environment == "production":
+            print("Prod Environment")
+
 
     # Dispatches the incoming data for processing.
     def dispatch(self, type, id, params, conn):
@@ -290,11 +297,14 @@ class VRMProcess(Extension):
     def get_parent_ticket_key(self, hostname):
         ticket_key = None
 
+        # Depending on the environment (sandbox or production), a JQL query is generated
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        #sandbox account
-        #jql_query =  f'cf[10234] ~ "{hostname}"'
-        #service account
-        jql_query =  f'cf[10293] ~ "{hostname}"'
+        if environment == "dev":
+            # For Sandbox environment, search in custom field 10234 for the hostname
+            jql_query =  f'cf[10234] ~ "{hostname}"'
+        elif environment == "production":
+            # For Production environment, search in custom field 10293 for the hostname
+            jql_query =  f'cf[10293] ~ "{hostname}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -321,10 +331,12 @@ class VRMProcess(Extension):
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        #sandbox account
-        #jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
-        #service account
-        jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
+        if environment == "dev":
+            # For Sandbox environment, search in custom field for the hostname
+            jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        elif environment == "production":
+            # For Production environment, search in custom field for the hostname
+            jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -352,10 +364,12 @@ class VRMProcess(Extension):
         ticket_key = None
 
         # JQL query to search for tickets with hostname field containing an empty string across all projects
-        #sandbox account
-        #jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
-        #service account
-        jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
+        if environment == "dev":
+            # For Sandbox environment, search in custom field for the hostname
+            jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
+        elif environment == "production":
+            # For Production environment, search in custom field for the hostname
+            jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
         # Define the payload for the POST request (containing the JQL query)
         payload = {
@@ -389,26 +403,37 @@ class VRMProcess(Extension):
             if vip_members in ["NaN", None]:
                description = "Task related to asset {}".format(asset.get('client_name', 'Unknown Host'))
 
+        if environment == "dev":
+            # For Sandbox environment, project_key and custom fields for creating parent ticket
+            project_key = "VULNA" 
+            custom_fields = {
+            "customfield_10234": asset['client_name'],  # SandBox Host Name
+            "customfield_10235": asset['vip_members'],  # SandBox VIP Members
+            "customfield_10236": asset['customer_contact'],  # SandBox Customer Contact
+            "customfield_10237": asset['technical_contact']  # SandBox Technical Contact
+            }
+        elif environment == "production":
+            # For Production environment, project_key and custom fields for creating parent ticket
+            project_key = "VULN"
+            custom_fields = {
+            "customfield_10293": asset['client_name'],  # Service Host Name
+            "customfield_10294": asset['vip_members'],  # Service VIP Members
+            "customfield_10295": asset['customer_contact'],  # Service Customer Contact
+            "customfield_10296": asset['technical_contact']  # Service Technical Contact
+            }
+
         # Define the payload for the POST request to create the parent ticket
         payload = {
             "fields": {
                 "project": {
-                    #"key": "VULNA"  # Replace with your project key
-                     "key": "VULN"
+                    "key": project_key
                 },
                 "summary": asset['client_name'],
                 "description": description,
                 "issuetype": {
                     "name": "Task"  # Replace with the appropriate issue type
                 },
-                # "customfield_10234": asset['client_name'],  # SandBox Host Name
-                # "customfield_10235": asset['vip_members'],  # SandBox VIP Members
-                # "customfield_10236": asset['customer_contact'],  # SandBox Customer Contact
-                # "customfield_10237": asset['technical_contact']  # SandBox Technical Contact
-                "customfield_10293": asset['client_name'],  # Service Host Name
-                "customfield_10294": asset['vip_members'],  # Service VIP Members
-                "customfield_10295": asset['customer_contact'],  # Service Customer Contact
-                "customfield_10296": asset['technical_contact']  # Service Technical Contact
+                **custom_fields   
             }
         }
 
@@ -431,17 +456,25 @@ class VRMProcess(Extension):
         ticket_key = None
         capitalized_severity = ticket['severity'].capitalize()
 
-        data_fields = {
-            "project": {
-                #"key": "VULNA"
-                "key": "VULN"
-            },
-            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
-            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
-            "priority":{
-                "name": f"{capitalized_severity}"
-            },
-            #service account
+        if environment == "dev":
+            # For Sandbox environment, project_key and custom fields for creating sub ticket
+            project_key = "VULNA"
+            custom_fields = {
+            "customfield_10200": ticket['asset_id'], # asset_id
+            "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
+            "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
+            "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
+            "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
+            "customfield_10221": ticket['first_seen'], # first_seen
+            "customfield_10222": ticket['last_seen'], # last_seen
+            "customfield_10228": f"{ticket['severity']}", # severity
+            "customfield_10230": ticket['state'], # state
+            "customfield_10207": ticket['ip_address'], # ip_address
+            }
+        elif environment == "production":
+            # For Production environment, project_key and custom fields for creating sub ticket
+            project_key = "VULN"
+            custom_fields = {
             "customfield_10263": ticket['asset_id'], # asset_id
             "customfield_10264": ticket['vulnerability_id'], # vulnerability_id
             "customfield_10271": f"{ticket['cvssv2_score']}", # cvssv2_score
@@ -452,20 +485,21 @@ class VRMProcess(Extension):
             "customfield_10288": f"{capitalized_severity}", # severity
             "customfield_10289": ticket['state'], # state
             "customfield_10267": ticket['ip_address'], # ip_address
-            #sandbox account
-            # "customfield_10200": ticket['asset_id'], # asset_id
-            # "customfield_10201": ticket['vulnerability_id'], # vulnerability_id
-            # "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
-            # "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
-            # "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
-            # "customfield_10221": ticket['first_seen'], # first_seen
-            # "customfield_10222": ticket['last_seen'], # last_seen
-            # "customfield_10228": f"{ticket['severity']}", # severity
-            # "customfield_10230": ticket['state'], # state
-            # "customfield_10207": ticket['ip_address'], # ip_address
+            }
+
+        data_fields = {
+            "project": {
+                "key": project_key
+            },
+            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'client_ci_name' - 'vulnerability name' field as summary
+            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
+            "priority":{
+                "name": f"{capitalized_severity}"
+            },
             "issuetype": {
                 "name": "Sub-task"
-            }
+            },
+            **custom_fields
         }
 
         if parent_ticket_key:
@@ -488,16 +522,24 @@ class VRMProcess(Extension):
         print("state: ", ticket["state"])
         capitalized_severity = ticket['severity'].capitalize()
 
-        data_fields = {
-            #service account
+        if environment == "dev":
+            # For Sandbox environment, project_key and custom fields for creating parent ticket
+            custom_fields = {
+            "customfield_10222": ticket["last_seen"],
+            "customfield_10228": ticket["severity"],
+            "customfield_10230": ticket["state"]
+            }
+        elif environment == "production":
+            # For Production environment, project_key and custom fields for creating parent ticket
+            custom_fields = {
             "customfield_10282": ticket["last_seen"],
             "customfield_10288": capitalized_severity,
             "customfield_10289": ticket["state"],
-            "priority": { "name":capitalized_severity }
-            #sandbox account
-            # "customfield_10222": ticket["last_seen"],
-            # "customfield_10228": ticket["severity"],
-            # "customfield_10230": ticket["state"]
+            }
+        
+        data_fields = {
+            **custom_fields,
+             "priority": { "name": capitalized_severity }
         }
 
         if parent_ticket_key:
@@ -715,16 +757,24 @@ class VRMProcess(Extension):
         ticket_key = None
         capitalized_severity = ticket['severity'].capitalize()
 
-        data_fields = {
-            "project": {
-                # "key": "VULNA"
-                "key": "VULN"
-            },
-            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
-            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
-            "priority":{
-                "name": f"{capitalized_severity}"
-            },
+        if environment == "dev":
+            # For Sandbox environment, project_key and custom fields for creating api sub-task ticket
+            project_key = "VULNA"
+            custom_fields = {
+            "customfield_10200": ticket['asset_id'], # asset_id
+            "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
+            "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
+            "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
+            "customfield_10221": ticket['first_seen'], # first_seen
+            "customfield_10222": ticket['last_seen'], # last_seen
+            "customfield_10228": f"{ticket['severity']}", # severity
+            "customfield_10230": ticket['state'], # state
+            "customfield_10207": ticket['ip_address'], # ip_address
+            }
+        elif environment == "production":
+            # For Production environment, project_key and custom fields for creating api sub-task ticket
+            project_key = "VULN"
+            custom_fields = {
             "customfield_10263": ticket['asset_id'], # asset_id
             "customfield_10271": f"{ticket['cvssv2_score']}", # cvssv2_score
             "customfield_10273": f"{ticket['cvssv3_score']}", # cvssv3_score
@@ -734,18 +784,21 @@ class VRMProcess(Extension):
             "customfield_10288": f"{capitalized_severity}", # severity
             "customfield_10289": ticket['state'], # state
             "customfield_10267": ticket['ip_address'], # ip_address
-            # "customfield_10200": ticket['asset_id'], # asset_id
-            # "customfield_10211": f"{ticket['cvssv2_score']}", # cvssv2_score
-            # "customfield_10213": f"{ticket['cvssv3_score']}", # cvssv3_score
-            # "customfield_10215" : f"{ticket['plugin_id']}", # plugin_id
-            # "customfield_10221": ticket['first_seen'], # first_seen
-            # "customfield_10222": ticket['last_seen'], # last_seen
-            # "customfield_10228": f"{ticket['severity']}", # severity
-            # "customfield_10230": ticket['state'], # state
-            # "customfield_10207": ticket['ip_address'], # ip_address
+            }
+
+        data_fields = {
+            "project": {
+                "key": project_key
+            },
+            "summary": f"{ticket['ip_address']} - {ticket['fqdn']} - {ticket['name']}",  # Use 'ip_adress' - 'fqdn' - 'vulnerability name' field as summary
+            "description": f"\n{ticket['name']}\n\n*Synopsys:*\n{ticket['synopsys']}\n\n *Description:*\n{ticket['description']}\n\n *Solution:*\n{ticket['solution']} \n\n*Output:*{ticket['output']}",
+            "priority":{
+                "name": f"{capitalized_severity}"
+            },
             "issuetype": {
                 "name": "Sub-task"
-            }
+            },
+            **custom_fields
         }
 
         if parent_ticket_key:
