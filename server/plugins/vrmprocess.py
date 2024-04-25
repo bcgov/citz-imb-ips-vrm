@@ -56,7 +56,7 @@ class VRMProcess(Extension):
 
         if environment == "dev":
             print("Dev Environment")
-        elif environment == "production":
+        elif environment == "prod":
             print("Prod Environment")
 
 
@@ -302,7 +302,7 @@ class VRMProcess(Extension):
         if environment == "dev":
             # For Sandbox environment, search in custom field 10234 for the hostname
             jql_query =  f'cf[10234] ~ "{hostname}"'
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, search in custom field 10293 for the hostname
             jql_query =  f'cf[10293] ~ "{hostname}"'
 
@@ -334,7 +334,7 @@ class VRMProcess(Extension):
         if environment == "dev":
             # For Sandbox environment, search in custom field for the hostname
             jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, search in custom field for the hostname
             jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
@@ -367,7 +367,7 @@ class VRMProcess(Extension):
         if environment == "dev":
             # For Sandbox environment, search in custom field for the hostname
             jql_query =  f'cf[10215] ~ "{plugin_id}" AND cf[10207] ~ "{ip_address}"'
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, search in custom field for the hostname
             jql_query =  f'cf[10275] ~ "{plugin_id}" AND cf[10267] ~ "{ip_address}"'
 
@@ -412,7 +412,7 @@ class VRMProcess(Extension):
             "customfield_10236": asset['customer_contact'],  # SandBox Customer Contact
             "customfield_10237": asset['technical_contact']  # SandBox Technical Contact
             }
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, project_key and custom fields for creating parent ticket
             project_key = "VULN"
             custom_fields = {
@@ -471,7 +471,7 @@ class VRMProcess(Extension):
             "customfield_10230": ticket['state'], # state
             "customfield_10207": ticket['ip_address'], # ip_address
             }
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, project_key and custom fields for creating sub ticket
             project_key = "VULN"
             custom_fields = {
@@ -529,7 +529,7 @@ class VRMProcess(Extension):
             "customfield_10228": ticket["severity"],
             "customfield_10230": ticket["state"]
             }
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, project_key and custom fields for creating parent ticket
             custom_fields = {
             "customfield_10282": ticket["last_seen"],
@@ -771,7 +771,7 @@ class VRMProcess(Extension):
             "customfield_10230": ticket['state'], # state
             "customfield_10207": ticket['ip_address'], # ip_address
             }
-        elif environment == "production":
+        elif environment == "prod":
             # For Production environment, project_key and custom fields for creating api sub-task ticket
             project_key = "VULN"
             custom_fields = {
