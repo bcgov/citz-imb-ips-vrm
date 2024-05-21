@@ -122,12 +122,6 @@ class VRMProcess(Extension):
 
         return jsonrpc2_result_encode(result, id)
     
-    # @app.route('/')
-    # def index(self):
-    #     print("index")
-    #     asset_data=self.fetch_asset_data()
-    #     return render_template('index.html', assets=asset_data)
-
     # Resolve reverse IP address to obtain asset information.
     def resolve_reverse_ip(self, ip_address):
         cur = self.pg_connection.cursor()
@@ -143,6 +137,13 @@ class VRMProcess(Extension):
 
     # Save asset information to the database.
     def save_assets(self, assets):
+
+        # Begin a new database transaction
+        cur = self.pg_connection.cursor()
+
+        # Delete all existing records in the asset table
+        cur.execute("DELETE FROM asset")
+
         for asset in assets:
             # save the asset
             values = (
@@ -153,7 +154,7 @@ class VRMProcess(Extension):
                 asset['customer_contact'],
                 asset['technical_contact']
             )
-            cur = self.pg_connection.cursor()
+           
             cur.execute(
                 "INSERT INTO asset(client_name, vip_members, ip_address, customer_contact, technical_contact) values(%s, %s, %s, %s, %s)",
                 values
@@ -937,4 +938,3 @@ class VRMProcess(Extension):
         else:
             print("Failed to add comment.")
             return None
-

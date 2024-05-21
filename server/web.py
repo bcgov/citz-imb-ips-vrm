@@ -17,7 +17,10 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 @app.route('/')
 def upload_form():
-    return render_template('upload.html')
+    return render_template('index.html')
+
+# @app.route('/assets', methods=['GET'])
+# def 
 
 @app.route('/upload', methods=['POST'])
 def process_upload():
