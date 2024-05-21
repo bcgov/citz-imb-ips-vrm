@@ -8,6 +8,9 @@ body, html {
     background-color: #003366; /* BC Government blue */
     color: white;
     padding: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .container {
@@ -19,9 +22,9 @@ body, html {
     align-items: center;
 }
 
-.logo img {
-    height: 50px;
-}
+/* .fa-home{
+    font-size:36px
+} */
 
 .main-nav ul {
     list-style: none;
@@ -107,4 +110,77 @@ body, html {
 
 .footer-bottom a:hover {
     text-decoration: underline;
+}
+
+.bcgov-button {
+    background-color: #036;
+    color: white;
+    border: 1px solid transparent;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: 'BC Sans', Arial, sans-serif;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.bcgov-button:hover {
+    background-color: #005f9e;
+}
+
+.bcgov-button:focus {
+    outline: 3px solid #fcba19;
+    outline-offset: 2px;
+}
+
+.bcgov-button i {
+    margin-right: 8px;
+}
+
+.upload-container {
+    padding: 20px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    height: 500px;
+}
+.upload-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.upload-header h1 {
+    font-family: 'BC Sans', Arial, sans-serif;
+    color: #036;
+    font-size: 24px;
+    margin: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-container input[type=text] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
 }

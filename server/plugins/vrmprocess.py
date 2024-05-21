@@ -166,6 +166,38 @@ class VRMProcess(Extension):
         return {
             "success": True
         }
+    
+    # Get all asset information from the database.
+    def get_assets(self):
+        # Create a cursor object
+        cur = self.pg_connection.cursor()
+
+        # Execute the SQL query to retrieve all assets
+        cur.execute("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
+
+        # Fetch all rows from the executed query
+        rows = cur.fetchall()
+
+        # Define a list to hold the assets
+        assets = []
+
+        # Process each row
+        for row in rows:
+            asset = {
+                'id': row[0],
+                'client_name': row[1],
+                'vip_members': row[2],
+                'ip_address': row[3],
+                'customer_contact': row[4],
+                'technical_contact': row[5]
+            }
+            assets.append(asset)
+
+        # Return the list of assets
+        return {
+            "success":True,
+            "assets": assets
+        }   
 
     # Process an Excel file containing asset information.
     def process_asset_file(self, file_path):

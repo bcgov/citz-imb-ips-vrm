@@ -16,11 +16,21 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 @app.route('/')
-def upload_form():
+def home():
+   
     return render_template('index.html')
 
 # @app.route('/assets', methods=['GET'])
-# def 
+# def assets_list():
+#     # make connection profile from Flask request
+#     conn = Connection(request)
+
+
+
+    
+    
+#     # just do it
+#     return Extension.dispatch_rpcmethod(method, 'call', '', params, conn)
 
 @app.route('/upload', methods=['POST'])
 def process_upload():
