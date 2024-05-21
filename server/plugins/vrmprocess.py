@@ -8,7 +8,7 @@ from datetime import datetime
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 from decouple import config
-from server import Extension, jsonrpc2_result_encode
+from base import Extension, jsonrpc2_result_encode
 #from ticket_manager import TicketManager
 
 try:
@@ -30,12 +30,14 @@ try:
     JIRA_AUTH = HTTPBasicAuth(JIRA_API_USERNAME, JIRA_API_KEY)
 
     JIRA_API_HEADER = {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
     }
 except Exception as e:
     # Handle exceptions raised during configuration retrieval
     print ("[*] Exception: %s" % (str(e)))
+
+# app = Flask(__name__)
 
 class VRMProcess(Extension):
     """
@@ -51,6 +53,7 @@ class VRMProcess(Extension):
         # Initializing attributes
         self.type = "rpcmethod" # Type attribute
         self.method = "vrmprocess" # Method attribute
+
         # Establishing a PostgreSQL database connection
         self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
 
@@ -58,7 +61,6 @@ class VRMProcess(Extension):
             print("Dev Environment")
         elif environment == "prod":
             print("Prod Environment")
-
 
     # Dispatches the incoming data for processing.
     def dispatch(self, type, id, params, conn):
@@ -69,6 +71,7 @@ class VRMProcess(Extension):
             Extension.send_accept(conn, self.method, True)
 
             # Get file data
+            print("[*] reading the data...")
             data = Extension.readall(conn)
             now = datetime.now().strftime("%Y%m%d%H%M%S")
             received_filename = params['filename']
@@ -118,6 +121,12 @@ class VRMProcess(Extension):
                 print("[*] api data save done")
 
         return jsonrpc2_result_encode(result, id)
+    
+    # @app.route('/')
+    # def index(self):
+    #     print("index")
+    #     asset_data=self.fetch_asset_data()
+    #     return render_template('index.html', assets=asset_data)
 
     # Resolve reverse IP address to obtain asset information.
     def resolve_reverse_ip(self, ip_address):

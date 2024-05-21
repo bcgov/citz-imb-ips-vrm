@@ -7,7 +7,7 @@ COPY requirements.txt requirements.txt
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 COPY . /app
-RUN mkdir /app/data
-RUN mkdir /app/data/vrm_list
+# RUN mkdir /app/data
+# RUN mkdir /app/data/vrm_list
 EXPOSE 5555
-CMD ["python3", "server.py"]
+CMD ["python3", "web.py"]
