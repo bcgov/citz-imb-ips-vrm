@@ -5,7 +5,6 @@ import hashlib
 import argparse
 import json
 import sys
-import requests
 from decouple import config
 from tkinter import *
 from tkinter import filedialog
@@ -16,7 +15,6 @@ customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 try:
-    remote_url = config('REMOTE_URL', default='http://localhost:5555')
     client_encoding = config('CLIENT_ENCODING', default='utf-8')
 except KeyboardInterrupt:
     print("\n[*] User has requested an interrupt")
@@ -26,8 +24,10 @@ except KeyboardInterrupt:
 parser = argparse.ArgumentParser()
 parser.add_argument('--filename', help="file name", default='')
 parser.add_argument('--source', help="data source", default='')
+parser.add_argument('--buffer_size', help="Number of samples to be used", default=8192, type=int)
 
 args = parser.parse_args()
+buffer_size = args.buffer_size
 filename = args.filename
 source = args.source
 
@@ -43,6 +43,13 @@ def jsonrpc2_encode(method, params = None):
     id = jsonrpc2_create_id(data)
     data['id'] = id
     return (id, json.dumps(data))
+
+def read_in_chunks(file_object, chunk_size=8192):
+    while True:
+        data = file_object.read(chunk_size)
+        if not data:
+            break
+        yield data
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -122,39 +129,64 @@ class App(customtkinter.CTk):
             # Check if file extension is valid
             file_extension = os.path.splitext(filename)[1]
             if file_extension.lower() in valid_extensions:
-                # Your existing file sending logic goes here
-                data = {
-                    'method': 'vrmprocess'
-                }
-                files = {
-                    'file': open(filename, 'rb')
-                }
-                response = requests.post(remote_url + '/upload', data=data, files=files)
+            # Your existing file sending logic goes here
+                # make the message
+                id, message = jsonrpc2_encode('vrmprocess', {
+                    "filename": filename,
+                })
+                print (message)
 
-                jsondata = json.loads(response.text)
-                if jsondata['jsonrpc'] == "2.0" and jsondata['params']['success'] == True:
-                    tkinter.messagebox.showinfo("File Uploaded", f"{filename_only} has been saved successfully.")
-                else:
-                    tkinter.messagebox.showerror("Error", "Please enter a valid file.")
+                # connect to server
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect(('localhost', 5555))
+
+                # send a message
+                sock.send(message.encode(client_encoding))
+                response = sock.recv(buffer_size)
+                jsondata = json.loads(response.decode(client_encoding))
+                print (jsondata)
+
+                # read the file
+                if jsondata['method'] == "vrmprocess_accept" and jsondata['params']['success'] == True:
+                    with open(filename, 'rb') as f:
+                        for chunk in read_in_chunks(f):
+                            sock.send(chunk)
+                        sock.send(b'')
+                        # Your existing file sending logic goes here
+                        tkinter.messagebox.showinfo("File Uploaded", f"{filename_only} has been saved successfully.")
+                # close the connection
+                sock.close()
+                 
+            else: tkinter.messagebox.showerror("Error", "Please upload a file with valid extension (json, xlsx, csv).")
+        else:
+            tkinter.messagebox.showerror("Error", "Please enter a valid file.")
 
     def processAPI_from_tenable_button_event(self, source):
         print("processAPI_from_tenable_button_event> ", source)
 
         if source and source == "tenable":
-            tkinter.messagebox.showinfo("Processing...", f"Jira Tickets are generated from Tenable API Vulnerability List now...")
-
-            _, message = jsonrpc2_encode('vrmprocess', {
-                "source": source
+        # make the message
+            id, message = jsonrpc2_encode('vrmprocess', {
+                "source": source,
             })
-            response = requests.post(remote_url + '/jsonrpc2', data=message, headers={'Content-type': 'application/json'})
+            print ('message: ',message)
 
-            jsondata = json.loads(response.text)
-            if jsondata['jsonrpc'] == "2.0" and jsondata['params']['success'] == True:
-                tkinter.messagebox.showinfo("File Uploaded", "Done.")
-            else:
-                tkinter.messagebox.showerror("Error", "Something wrong")
+            # connect to server
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect(('localhost', 5555))
+
+            # send a message
+            sock.send(message.encode(client_encoding))
+            response = sock.recv(buffer_size)
+            jsondata = json.loads(response.decode(client_encoding))
+            print ('jsondata: ',jsondata)
+
+            tkinter.messagebox.showinfo("Processing...", f"Jira Tickets are generated from Tenable API Vulnerability List now...")
+            # close the connection
+            sock.close()
 
 def main(args):
+
     root = customtkinter.CTk()
     root.geometry("500x350")
 

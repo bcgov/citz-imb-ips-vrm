@@ -8,7 +8,7 @@ from datetime import datetime
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 from decouple import config
-from server import Extension, jsonrpc2_result_encode
+from base import Extension, jsonrpc2_result_encode
 #from ticket_manager import TicketManager
 
 try:
@@ -30,12 +30,14 @@ try:
     JIRA_AUTH = HTTPBasicAuth(JIRA_API_USERNAME, JIRA_API_KEY)
 
     JIRA_API_HEADER = {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
     }
 except Exception as e:
     # Handle exceptions raised during configuration retrieval
     print ("[*] Exception: %s" % (str(e)))
+
+# app = Flask(__name__)
 
 class VRMProcess(Extension):
     """
@@ -51,6 +53,7 @@ class VRMProcess(Extension):
         # Initializing attributes
         self.type = "rpcmethod" # Type attribute
         self.method = "vrmprocess" # Method attribute
+
         # Establishing a PostgreSQL database connection
         self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
 
@@ -58,7 +61,6 @@ class VRMProcess(Extension):
             print("Dev Environment")
         elif environment == "prod":
             print("Prod Environment")
-
 
     # Dispatches the incoming data for processing.
     def dispatch(self, type, id, params, conn):
@@ -69,6 +71,7 @@ class VRMProcess(Extension):
             Extension.send_accept(conn, self.method, True)
 
             # Get file data
+            print("[*] reading the data...")
             data = Extension.readall(conn)
             now = datetime.now().strftime("%Y%m%d%H%M%S")
             received_filename = params['filename']
@@ -118,7 +121,7 @@ class VRMProcess(Extension):
                 print("[*] api data save done")
 
         return jsonrpc2_result_encode(result, id)
-
+    
     # Resolve reverse IP address to obtain asset information.
     def resolve_reverse_ip(self, ip_address):
         cur = self.pg_connection.cursor()
@@ -134,6 +137,13 @@ class VRMProcess(Extension):
 
     # Save asset information to the database.
     def save_assets(self, assets):
+
+        # Begin a new database transaction
+        cur = self.pg_connection.cursor()
+
+        # Delete all existing records in the asset table
+        cur.execute("DELETE FROM asset")
+
         for asset in assets:
             # save the asset
             values = (
@@ -144,7 +154,7 @@ class VRMProcess(Extension):
                 asset['customer_contact'],
                 asset['technical_contact']
             )
-            cur = self.pg_connection.cursor()
+           
             cur.execute(
                 "INSERT INTO asset(client_name, vip_members, ip_address, customer_contact, technical_contact) values(%s, %s, %s, %s, %s)",
                 values
@@ -156,6 +166,38 @@ class VRMProcess(Extension):
         return {
             "success": True
         }
+    
+    # Get all asset information from the database.
+    def get_assets(self):
+        # Create a cursor object
+        cur = self.pg_connection.cursor()
+
+        # Execute the SQL query to retrieve all assets
+        cur.execute("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
+
+        # Fetch all rows from the executed query
+        rows = cur.fetchall()
+
+        # Define a list to hold the assets
+        assets = []
+
+        # Process each row
+        for row in rows:
+            asset = {
+                'id': row[0],
+                'client_name': row[1],
+                'vip_members': row[2],
+                'ip_address': row[3],
+                'customer_contact': row[4],
+                'technical_contact': row[5]
+            }
+            assets.append(asset)
+
+        # Return the list of assets
+        return {
+            "success":True,
+            "assets": assets
+        }   
 
     # Process an Excel file containing asset information.
     def process_asset_file(self, file_path):
@@ -928,4 +970,3 @@ class VRMProcess(Extension):
         else:
             print("Failed to add comment.")
             return None
-

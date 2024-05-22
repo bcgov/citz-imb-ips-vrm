@@ -7,3 +7,4 @@ openpyxl
 alembic
 SQLAlchemy
 python-dotenv
+flask

@@ -30,7 +30,7 @@ services:
   server:
     container_name: server
     build: ./server
-    command: bash -c "alembic upgrade head && python3 ./server.py"
+    command: bash -c "alembic upgrade head && python3 ./web.py"
     volumes:
       - ./server:/app
     ports:
