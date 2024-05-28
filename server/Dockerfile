@@ -10,4 +10,5 @@ COPY . /app
 # RUN mkdir /app/data
 # RUN mkdir /app/data/vrm_list
 EXPOSE 5555
+# Run web.py
 CMD ["python3", "web.py"]
