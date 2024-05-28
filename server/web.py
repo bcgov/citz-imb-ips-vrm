@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, jsonify
 import os
 import sys
 import json
@@ -20,17 +20,14 @@ def home():
    
     return render_template('index.html')
 
-# @app.route('/assets', methods=['GET'])
-# def assets_list():
-#     # make connection profile from Flask request
-#     conn = Connection(request)
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    vrmprocess = Exception.get_rpcmethod('vrmprocess')
 
+    assets = vrmprocess.get_assets()
+    print(assets)
 
-
-    
-    
-#     # just do it
-#     return Extension.dispatch_rpcmethod(method, 'call', '', params, conn)
+    return jsonify(assets)
 
 @app.route('/upload', methods=['POST'])
 def process_upload():

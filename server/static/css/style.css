@@ -1,18 +1,69 @@
 body, html {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
 }
 
-.bc-header {
-    background-color: #003366; /* BC Government blue */
-    color: white;
-    padding: 10px 0;
+/* header */
+header {
+    background-color: #036;
+    border-bottom: 2px solid #fcba19;
+    padding: 0 65px 0 65px;
+    color: #fff;
     display: flex;
+    height: 65px;
+    top: 0px;
+    position: fixed;
+    width: 100%;
+  }
+  
+  header h1 {
+    font-family: ‘BCSans’, ‘Noto Sans’, Verdana, Arial, sans-serif;
+    font-weight: normal;  /* 400 */
+    margin: 5px 5px 0 18px;
+    visibility: hidden;
+  }
+  
+  header .banner {
+    display: flex;
+    justify-content: flex-start;
     align-items: center;
-    justify-content: space-between;
-}
-
+    margin: 0 10px 0 0;
+    /* border-style: dotted;
+    border-width: 1px;
+    border-color: lightgrey; */
+  }
+  
+  header .other {
+    display: flex;
+    flex-grow: 1;
+    /* border-style: dotted;
+    border-width: 1px;
+    border-color: lightgrey; */
+  }
+  
+  /*
+    These are sample media queries only. Media queries are quite subjective
+    but, in general, should be made for the three different classes of screen
+    size: phone, tablet, full.
+  */
+  
+  @media screen and (min-width: 600px) and (max-width: 899px) {
+    header h1 {
+      font-size: calc(7px + 2.2vw);
+      visibility: visible;
+    }
+  }
+  
+  @media screen and (min-width: 900px) {
+    header h1 {
+      font-size: 2.0em;
+      visibility: visible;
+    }
+  }
+ .vrm_title{
+    font-family: 'BCSans-Bold';
+    font-weight: bolder;
+ }
 .container {
     width: 90%;
     max-width: 1200px;
@@ -22,135 +73,151 @@ body, html {
     align-items: center;
 }
 
-/* .fa-home{
-    font-size:36px
-} */
-
-.main-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-}
-
-.main-nav ul li {
-    margin-left: 20px;
-}
-
-.main-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.main-nav ul li a:hover {
-    text-decoration: underline;
-}
-
-.bc-footer {
-    background-color: #003366; /* BC Government blue */
-    color: white;
-    padding: 20px 0;
-}
-
-.footer-columns {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-.footer-column {
-    flex: 1;
-    min-width: 200px;
-    margin: 10px 0;
-}
-
-.footer-column h3 {
-    border-bottom: 1px solid white;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.footer-column ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-column ul li {
-    margin-bottom: 10px;
-}
-
-.footer-column ul li a {
-    color: white;
-    text-decoration: none;
-}
-
-.footer-column ul li a:hover {
-    text-decoration: underline;
-}
-
-.social-media {
-    display: flex;
-    gap: 10px;
-}
-
-.footer-bottom {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.footer-bottom p {
-    margin: 5px 0;
-}
-
-.footer-bottom a {
-    color: white;
-    text-decoration: none;
-}
-
-.footer-bottom a:hover {
-    text-decoration: underline;
-}
-
-.bcgov-button {
+/* footer */
+footer {
     background-color: #036;
-    color: white;
-    border: 1px solid transparent;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-family: 'BC Sans', Arial, sans-serif;
-    cursor: pointer;
+    border-top: 2px solid #fcba19;
+    color: #fff;
+    font-family: ‘BCSans’, ‘Noto Sans’, Verdana, Arial, sans-serif; 
+  }
+  
+  footer .container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    height: 46px;
+  }
+  
+  footer ul {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 0;
+    color: #fff;
+    list-style: none;
+    align-items: center;
+    height: 100%;
+  }
+  
+  footer ul li a {
+    font-size: 0.813em;
+    font-weight: normal;  /* 400 */
+    color: #fff;
+    border-right: 1px solid #4b5e7e;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  
+  :focus {
+    outline: 4px solid #3B99FC;
+    outline-offset: 1px;
+  }
+
+  .BC-Gov-SecondaryButton-Dark {
+    background: none;
+    border-radius: 4px;
+    border: 2px solid #fff;
+    padding: .375rem .75rem;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
-    margin: 10px 0;
-    border-radius: 4px;
+    display: block;
+    font-size: 1rem;
+    Font-family: 'BCSans-Bold,sans-serif!important';
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: #fff;
+    }
+
+.BC-Gov-SecondaryButton-Dark:hover {
+    text-decoration: underline;
+    background-color: #fff;
+    color: #313132;
+    }
+
+:focus {
+    outline-offset: 1px;
+    outline: 4px solid #3B99FC;
+    }
+
+.BC-Gov-SecondaryButton-Dark:active {
+    background-color: #f2f2f2;
+    color: #313132;
+    }
+
+.background-colour {
+    background-color: #003366;
+    height: 100px;
+    width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .BC-Gov-PrimaryButton {
+      background-color: #003366;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      padding: 12px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      font-size: 18px;
+      font-family: ‘BCSans’, ‘Noto Sans’, Verdana, Arial, sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+  }
+  
+  .BC-Gov-PrimaryButton:hover {
+    text-decoration: underline;
+    opacity: 0.80;
+  }
+  
+  :focus {
+    outline: 4px solid #3B99FC;
+    outline-offset: 1px;
+  }
+  
+  .BC-Gov-PrimaryButton:active {
+    opacity: 1;
+  }
+
+
+.bcgov-login-button {
+    background-color: #fcba19;
+    color: #003366;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
 }
 
-.bcgov-button:hover {
-    background-color: #005f9e;
+.bcgov-login-button:hover {
+    background-color: #ffa500;
 }
 
-.bcgov-button:focus {
-    outline: 3px solid #fcba19;
-    outline-offset: 2px;
-}
-
-.bcgov-button i {
-    margin-right: 8px;
-}
-
-.upload-container {
+.body-container {
     padding: 20px;
-    background-color: #f8f8f8;
     border: 1px solid #ddd;
     border-radius: 4px;
-    height: 500px;
+    background-color: aliceblue;  
+    flex-direction: column; 
+    height: 90vh;
 }
 .upload-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-top:65px;
 }
 
 .upload-header h1 {
