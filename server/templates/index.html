@@ -1,33 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VRM</title>
-    <link rel="icon" href="static\images\favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <header class="bc-header">
-        <div class="container">
-        <div class="banner">
-            
-          <a href="https://gov.bc.ca">
-            <img src="static\images\bc-gov-logo.png" alt="Go to the Government of British Columbia website" />
-          </a>
-          
-        </div>
-        <div class="other"><h1 class="vrm_title">VRM</h1>
-        </div>
-        <button class="BC-Gov-SecondaryButton-Dark" id="login-button" type="button" name="button">Log In</button>&nbsp;
-        <button class="BC-Gov-SecondaryButton-Dark" id="logout-button" type="button" name="button">Sign Out</button>
-    </div>
-      </header>
-
+{% include 'header.html' %}
     <div class="body-container">
-    <div class="upload-header">
+      <div class="login-box">
+        <h2>Welcome!</h2>
+        <h3>Please Sign in </h3>
+            <button class="BC-Gov-PrimaryButton index-loginButton" id="login-button" type="button" name="button">Log In</button>
+      </div>
+    </div>
+    <!-- <div class="upload-header">
         <h1>Asset List</h1>
         <form action="/upload" method="post" enctype="multipart/form-data">
         <div style="padding: 20px;">
@@ -63,22 +42,9 @@
                 <td>Edit | Delete</td>
             </tr>
         </tbody>
-    </table> 
+    </table>  -->
 
-</div>
-<footer class="footer">
-    <div class="container">
-    <ul>
-      <li><a href=".">Home</a></li>
-      <li><a href=".">Disclaimer</a></li>
-      <li><a href=".">Privacy</a></li>
-      <li><a href=".">Accessibility</a></li>
-      <li><a href=".">Copyright</a></li>
-      <li><a href=".">Contact Us</a></li>
-    </ul>
-    </div>
-  </footer>
-
+{% include 'footer.html' %}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     
     <script type="module">
@@ -96,5 +62,3 @@
 
    
   </script>
-</body>
-</html>

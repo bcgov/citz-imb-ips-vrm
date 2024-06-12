@@ -17,17 +17,17 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 @app.route('/')
 def home():
-   
     return render_template('index.html')
 
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
-    vrmprocess = Exception.get_rpcmethod('vrmprocess')
+    vrmprocess = Extension.get_rpcmethod('vrmprocess')
 
-    assets = vrmprocess.get_assets()
-    print(assets)
+    # assets = vrmprocess.get_assets()
+    # print(assets)
 
-    return jsonify(assets)
+    #return jsonify(assets)
+    return render_template('dashboard.html')
 
 @app.route('/upload', methods=['POST'])
 def process_upload():
