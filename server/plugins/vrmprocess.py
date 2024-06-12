@@ -122,9 +122,28 @@ class VRMProcess(Extension):
 
         return jsonrpc2_result_encode(result, id)
     
+    def get_cursor(self):
+        try:
+            cursor = self.pg_connection.cursor()
+        except psycopg2.InterfaceError as e:
+            print('{} - connection will be reset'.format(e))
+            if self.pg_connection:
+                if cursor:
+                    cursor.close()
+                self.pg_connection.close()
+            self.pg_connection = None
+            cursor = None
+
+            # Reconnect
+            self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
+
+            cursor = self.pg_connection.cursor()
+        
+        return cursor
+    
     # Resolve reverse IP address to obtain asset information.
     def resolve_reverse_ip(self, ip_address):
-        cur = self.pg_connection.cursor()
+        cur = self.get_cursor()
         cur.execute('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset where ip_address = %s limit 1', (ip_address,))
         row = cur.fetchone()
 
@@ -139,7 +158,7 @@ class VRMProcess(Extension):
     def save_assets(self, assets):
 
         # Begin a new database transaction
-        cur = self.pg_connection.cursor()
+        cur = self.get_cursor()
 
         # Delete all existing records in the asset table
         cur.execute("DELETE FROM asset")
@@ -170,7 +189,7 @@ class VRMProcess(Extension):
     # Get all asset information from the database.
     def get_assets(self):
         # Create a cursor object
-        cur = self.pg_connection.cursor()
+        cur = self.get_cursor()
 
         # Execute the SQL query to retrieve all assets
         cur.execute("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
@@ -904,7 +923,7 @@ class VRMProcess(Extension):
     # This method fetches all asset data from the database.
     def fetch_asset_data(self):
         # Establish a cursor for executing SQL commands
-        cur = self.pg_connection.cursor()
+        cur = self.get_cursor()
 
         # Execute SQL command to select data from the 'asset' table
         cur.execute('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset')
