@@ -9,6 +9,8 @@ import requests
 
 from decouple import config
 
+# Comment to trigger image build
+
 try:
     remote_url = config('REMOTE_URL', default='http://localhost:5555')
     client_encoding = config('CLIENT_ENCODING', default='utf-8')
@@ -50,7 +52,7 @@ def main(args):
         files = {
             'file': open(filename, 'rb')
         }
-        
+
         response = requests.post(remote_url + '/upload', data=data, files=files)
         print (response.text)
 
