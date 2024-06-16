@@ -123,10 +123,12 @@ class VRMProcess(Extension):
         return jsonrpc2_result_encode(result, id)
     
     def get_cursor(self):
+        cursor = None  # initialize the local variable
+
         try:
             cursor = self.pg_connection.cursor()
         except psycopg2.InterfaceError as e:
-            print('{} - connection will be reset'.format(e))
+            print('{} - connection will be reset (InterfaceError)'.format(e))
             if self.pg_connection:
                 if cursor:
                     cursor.close()
@@ -136,16 +138,46 @@ class VRMProcess(Extension):
 
             # Reconnect
             self.pg_connection = psycopg2.connect(host=PG_HOST, dbname=PG_DBNAME, user=PG_USER, password=PG_PASSWORD, port=PG_PORT)
-
             cursor = self.pg_connection.cursor()
-        
+
         return cursor
     
+    def fetchone(self, SQL, data = None):
+        done = False
+
+        row = None
+        while not done:
+            try:
+                cur = self.get_cursor()
+                cur.execute(SQL, data)
+                row = cur.fetchone()
+                done = True
+            except psycopg2.OperationalError as e:
+                print('{} - connection will be reset (OperationalError)'.format(e))
+
+        return row
+    
+    def fetchall(self, SQL, data = None):
+        done = False
+
+        rows = None
+        while not done:
+            try:
+                cur = self.get_cursor()
+                cur.execute(SQL, data)
+                rows = cur.fetchall()
+                done = True
+            except psycopg2.OperationalError as e:
+                print('{} - connection will be reset (OperationalError)'.format(e))
+
+        return rows
+
     # Resolve reverse IP address to obtain asset information.
     def resolve_reverse_ip(self, ip_address):
-        cur = self.get_cursor()
-        cur.execute('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset where ip_address = %s limit 1', (ip_address,))
-        row = cur.fetchone()
+        #cur = self.get_cursor()
+        #cur.execute('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset where ip_address = %s limit 1', (ip_address,))
+        #row = cur.fetchone()
+        row = self.fetchone('select id, client_name, vip_members, ip_address, customer_contact, technical_contact from asset where ip_address = %s limit 1', (ip_address,))
 
         fieldnames = ['id', 'client_name', 'vip_members', 'ip_address', 'customer_contact', 'technical_contact']
         if row:
@@ -189,13 +221,14 @@ class VRMProcess(Extension):
     # Get all asset information from the database.
     def get_assets(self):
         # Create a cursor object
-        cur = self.get_cursor()
+        #cur = self.get_cursor()
 
         # Execute the SQL query to retrieve all assets
-        cur.execute("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
+        #cur.execute("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
 
         # Fetch all rows from the executed query
-        rows = cur.fetchall()
+        #rows = cur.fetchall()
+        rows = self.fetchall("SELECT id, client_name, vip_members, ip_address, customer_contact, technical_contact FROM asset")
 
         # Define a list to hold the assets
         assets = []
